@@ -1,0 +1,97 @@
+# Kong Service Definition for Triage Service
+# Elite Implementation Standard v2.0.0
+
+apiVersion: configuration.konghq.com/v1
+kind: KongService
+metadata:
+  name: triage-service
+  namespace: learnflow
+spec:
+  name: triage-service
+  protocol: http
+  host: triage-service.learflow.svc.cluster.local  # K8s service DNS
+  port: 8000
+  path: /
+
+  # Connection settings
+  connect_timeout: 5000  # 5 seconds
+  write_timeout: 10000   # 10 seconds
+  read_timeout: 10000    # 10 seconds
+
+  # Retries
+  retries: 3
+
+  # Tags for organization
+  tags:
+    - learnflow
+    - triage
+    - backend-service
+    - security-critical
+
+---
+# Service Plugin Chain
+# Apply all security and rate limiting plugins
+apiVersion: configuration.konghq.com/v1
+kind: KongServicePlugin
+metadata:
+  name: triage-service-security
+  namespace: learnflow
+spec:
+  service: triage-service
+  plugins:
+    - name: triage-jwt-validation
+      config:
+        # Enable strict validation
+        run_on: first
+        fault_tolerant: false
+
+    - name: triage-rate-limiting
+      config:
+        minute: 100
+        limit_by: consumer
+        policy: redis
+
+    - name: triage-size-limiting
+      config:
+        allowed_payload_size: 1048576
+
+    - name: request-transformer
+      config:
+        add:
+          headers:
+            - "X-Service-Name:triage-service"
+            - "X-Service-Version:1.0.0"
+
+    - name: correlation-id
+      config:
+        header_name: X-Correlation-ID
+        generator: uuid#counter
+        echo_downstream: true
+
+---
+# Upstream Health Check Configuration
+apiVersion: configuration.konghq.com/v1
+kind: KongUpstreamPolicy
+metadata:
+  name: triage-service-healthcheck
+  namespace: learnflow
+spec:
+  healthchecks:
+    active:
+      type: http
+      http_path: /health
+      healthy:
+        interval: 10
+        successes: 1
+      unhealthy:
+        interval: 5
+        http_failures: 2
+        timeouts: 3
+    passive:
+      healthy:
+        successes: 1
+      unhealthy:
+        http_failures: 2
+        timeouts: 3
+  algorithm: round-robin
+  hash_on: consumer

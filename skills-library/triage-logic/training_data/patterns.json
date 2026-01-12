@@ -1,0 +1,294 @@
+{
+  "schema_version": "1.0.0",
+  "description": "Training patterns for intent classification in Triage Skill",
+  "created": "2026-01-12",
+  "elite_standard": "2.0.0",
+
+  "intents": {
+    "syntax_help": {
+      "description": "Code errors, syntax issues, debugging assistance",
+      "target_agent": "debug-agent",
+      "priority": "high",
+      "patterns": [
+        {
+          "type": "keyword",
+          "weight": 1.0,
+          "examples": ["error", "exception", "crash", "fail", "wrong", "incorrect", "bug"]
+        },
+        {
+          "type": "phrase",
+          "weight": 0.9,
+          "examples": [
+            "syntax error",
+            "traceback",
+            "stack trace",
+            "runtime error",
+            "doesn't work",
+            "not working"
+          ]
+        },
+        {
+          "type": "regex",
+          "weight": 0.8,
+          "patterns": [
+            "can't|cannot.*\\b(code|script|program|function)\\b",
+            "fix|debug|solve|resolve.*\\b(error|issue|problem)\\b",
+            "syntax|indent|parse|compile.*\\b(error|issue)\\b"
+          ]
+        }
+      ],
+      "test_cases": [
+        "I'm getting a syntax error in my for loop",
+        "My code crashes when I run it",
+        "Can you help me debug this error?",
+        "The program fails with TypeError",
+        "I have a bug in my function"
+      ]
+    },
+
+    "concept_explanation": {
+      "description": "Understanding programming concepts, theory explanations",
+      "target_agent": "concepts-agent",
+      "priority": "medium",
+      "patterns": [
+        {
+          "type": "keyword",
+          "weight": 1.0,
+          "examples": ["what is", "explain", "how does", "why", "concept", "theory"]
+        },
+        {
+          "type": "phrase",
+          "weight": 0.9,
+          "examples": [
+            "define",
+            "how to",
+            "reason for",
+            "purpose of",
+            "benefit of",
+            "difference between"
+          ]
+        },
+        {
+          "type": "regex",
+          "weight": 0.8,
+          "patterns": [
+            "understand|comprehend.*\\b(concept|idea)\\b",
+            "compare|versus|vs\\b",
+            "fundamental|basic|principle\\b"
+          ]
+        }
+      ],
+      "test_cases": [
+        "What is polymorphism in object-oriented programming?",
+        "Explain how recursion works",
+        "Why use asynchronous programming?",
+        "What's the difference between list and tuple?",
+        "Define encapsulation concept"
+      ]
+    },
+
+    "exercise_request": {
+      "description": "Request for exercises, practice problems, challenges",
+      "target_agent": "exercise-agent",
+      "priority": "medium",
+      "patterns": [
+        {
+          "type": "keyword",
+          "weight": 1.0,
+          "examples": ["exercise", "practice", "problem", "challenge", "quiz", "assignment"]
+        },
+        {
+          "type": "phrase",
+          "weight": 0.9,
+          "examples": [
+            "give me",
+            "provide",
+            "share",
+            "show me",
+            "can I have",
+            "looking for"
+          ]
+        },
+        {
+          "type": "regex",
+          "weight": 0.8,
+          "patterns": [
+            "practice|learn|study.*\\b(code|python|programming)\\b",
+            "demo|sample|example.*\\b(code|script)\\b",
+            "exercise|problem.*\\b(for|about|on)\\b"
+          ]
+        }
+      ],
+      "test_cases": [
+        "Give me some practice exercises for loops",
+        "I need problems to solve about arrays",
+        "Can you provide a quiz on functions?",
+        "Show me examples of list comprehensions",
+        "I want to practice error handling"
+      ]
+    },
+
+    "progress_check": {
+      "description": "Progress tracking, mastery assessment, learning status",
+      "target_agent": "progress-agent",
+      "priority": "low",
+      "patterns": [
+        {
+          "type": "keyword",
+          "weight": 1.0,
+          "examples": ["progress", "status", "level", "mastery", "score", "track"]
+        },
+        {
+          "type": "phrase",
+          "weight": 0.9,
+          "examples": [
+            "how am I doing",
+            "where am I",
+            "what's my",
+            "check my",
+            "view my",
+            "see my"
+          ]
+        },
+        {
+          "type": "regex",
+          "weight": 0.8,
+          "patterns": [
+            "track|check|view|see.*\\b(learning|progress|performance)\\b",
+            "assessment|evaluation|review|overview\\b",
+            "achieve|complete|finish|done.*\\b(task|exercise|module)\\b"
+          ]
+        }
+      ],
+      "test_cases": [
+        "How am I progressing in my Python learning?",
+        "Check my mastery level for OOP concepts",
+        "What's my score on recent exercises?",
+        "Show me my learning progress",
+        "Where am I in the curriculum?"
+      ]
+    }
+  },
+
+  "edge_cases": {
+    "low_confidence_threshold": 0.6,
+    "fallback_agent": "review-agent",
+    "empty_query": {
+      "intent": "progress_check",
+      "confidence": 0.1,
+      "note": "Default to progress check for empty/invalid queries"
+    },
+    "very_short_query": {
+      "min_length": 3,
+      "intent": "progress_check",
+      "confidence": 0.25,
+      "note": "Low confidence for queries < 3 characters"
+    },
+    "long_query_truncation": {
+      "max_length": 1000,
+      "strategy": "truncate_with_ellipsis",
+      "note": "Optimize for efficiency"
+    }
+  },
+
+  "performance_benchmarks": {
+    "token_efficiency": {
+      "baseline_llm": 1500,
+      "skill_target": 150,
+      "efficiency_gain": 0.90,
+      "validation_criteria": "Every classification must use <1000 tokens"
+    },
+    "latency": {
+      "avg_ms": 45,
+      "p95_ms": 150,
+      "p99_ms": 200,
+      "validation_criteria": "p95 < 150ms required"
+    },
+    "accuracy": {
+      "target": 0.95,
+      "minimum": 0.90,
+      "validation_criteria": "Must achieve >95% accuracy on test set"
+    }
+  },
+
+  "validation_rules": {
+    "input_validation": {
+      "query": {
+        "min_length": 1,
+        "max_length": 5000,
+        "type": "string"
+      },
+      "student_progress": {
+        "required": false,
+        "type": "object",
+        "boosts": {
+          "recent_errors": "syntax_help +0.1",
+          "low_completion": "concept_explanation +0.05",
+          "high_quiz_score": "exercise_request +0.05"
+        }
+      }
+    },
+    "output_validation": {
+      "intent": "enum(syntax_help, concept_explanation, exercise_request, progress_check)",
+      "confidence": "float(0.0-1.0)",
+      "keywords": "array(max 10 items)",
+      "processing_time_ms": "float(<150ms)",
+      "token_estimate": "int(<1000)"
+    }
+  },
+
+  "quality_gate_tests": {
+    "test_01_basic_classification": {
+      "description": "Basic intent classification for all types",
+      "validation": "Must classify all 4 intent types with confidence >0.7"
+    },
+    "test_02_edge_cases": {
+      "description": "Edge case handling",
+      "validation": "Empty queries, short queries, unknown intents handled"
+    },
+    "test_03_token_efficiency": {
+      "description": "Token usage validation",
+      "validation": "All queries must use <1000 tokens"
+    },
+    "test_04_performance": {
+      "description": "Performance benchmarks",
+      "validation": "p95 latency <150ms, avg latency <50ms"
+    },
+    "test_05_accuracy": {
+      "description": "Accuracy validation",
+      "validation": "95%+ accuracy on test cases"
+    },
+    "test_06_fallback_behavior": {
+      "description": "Low confidence routing",
+      "validation": "Confidence <0.6 routes to review-agent"
+    },
+    "test_07_dapr_compatibility": {
+      "description": "Dapr format validation",
+      "validation": "Output compatible with Dapr service invocation"
+    }
+  },
+
+  "integration_points": {
+    "intent_detection_script": "../intent-detection.py",
+    "route_selection_script": "../route-selection.py",
+    "quality_verification_script": "../../scripts/verify-triage-logic.py",
+    "fastapi_integration": "../../../backend/triage-service/src/services/intent_detection.py",
+    "dapr_integration": "../../../backend/triage-service/src/services/routing_logic.py"
+  },
+
+  "version_history": {
+    "1.0.0": {
+      "date": "2026-01-12",
+      "milestone": "2 - Triage Service",
+      "changes": "Initial release with 4 intents, deterministic patterns",
+      "elite_standard": true
+    }
+  },
+
+  "maintenance_notes": {
+    "add_new_patterns": "Add to appropriate intent section, maintain 95% accuracy requirement",
+    "update_weights": "Adjust based on false positive/negative analysis",
+    "performance_monitoring": "Track p95 latency and token usage in production",
+    "accuracy_tracking": "Monitor classification accuracy and update patterns if needed"
+  }
+}

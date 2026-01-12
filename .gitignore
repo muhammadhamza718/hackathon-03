@@ -1,0 +1,261 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+.Python
+env/
+venv/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+
+# Logs
+*.log
+logs/
+
+# Docker
+.dockerignore
+Dockerfile
+docker-compose.yml
+
+# Kubernetes
+*.kubeconfig
+*.kubeconfig.yml
+
+# Dapr
+.dapr/
+components/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Generated files
+*.generated.py
+*.generated.yaml
+
+# Node (for frontend, if needed)
+node_modules/
+npm-debug.log*
+
+# Build artifacts
+dist/
+build/
+*.whl
+*.tar.gz
+
+# Jupyter
+.ipynb_checkpoints
+
+# Secrets
+secrets/
+*.key
+*.pem
+*.crt
+*.cer
+
+# IDE specific
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# macOS
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Desktop.ini
+ehthumbs.db
+Icon?
+Thumbs.db
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Cache
+.cache/
+.mypy_cache/
+.pytest_cache/
+__pycache__/
+
+# Local development
+local/
+dev/
+test/
+
+# Documentation (generated)
+docs/_build/
+
+# Profiling
+*.prof
+*.profile
+
+# Coverage
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+
+# IDE project files
+*.iml
+.idea/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Python virtual environments
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Poetry
+poetry.lock
+
+# Pipenv
+Pipfile.lock
+
+# pyenv
+.python-version
+
+# celery beat schedule file
+celerybeat-schedule
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# Dapr components (generated/managed)
+infrastructure/dapr/components/*.yaml
+!infrastructure/dapr/components/README.md
+
+# Kafka schemas (managed)
+infrastructure/kafka/schemas/*.avsc
+!infrastructure/kafka/schemas/README.md
+
+# Kong configuration (managed)
+infrastructure/kong/*.yaml
+!infrastructure/kong/README.md
+
+# Kubernetes manifests (managed)
+infrastructure/k8s/**/*.yaml
+!infrastructure/k8s/**/README.md
+
+# Secrets and credentials
+**/secrets/
+**/*.key
+**/*.pem
+**/*.crt
+**/*.cer
+**/credentials.json
+**/service-account.json
+
+# Benchmark results
+benchmarks/results/
+performance/results/
+
+# Test reports
+test-results/
+junit.xml
+
+# Security scanning
+*.sarif
+*.bom
+
+# Local configs
+config/local/
+config/dev/
+config/test/
+
+# Docker compose override
+docker-compose.override.yml
+
+# IDE workspace files
+*.code-workspace
+
+# Project specific
+backend/*/data/
+backend/*/storage/
+skills-library/*/cache/
+skills-library/*/data/

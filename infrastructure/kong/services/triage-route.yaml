@@ -1,0 +1,130 @@
+# Kong Route Configuration for Triage Service
+# Elite Implementation Standard v2.0.0
+
+apiVersion: configuration.konghq.com/v1
+kind: KongRoute
+metadata:
+  name: triage-route
+  namespace: learnflow
+spec:
+  service: triage-service
+  name: triage-route
+
+  # Path matching
+  paths:
+    - /api/v1/triage
+
+  # Methods
+  methods:
+    - POST
+    - OPTIONS  # For CORS preflight
+
+  # Protocols
+  protocols:
+    - http
+    - https
+
+  # Headers for additional routing
+  headers:
+    X-Service-Version:
+      - "1.0"
+      - "2.0"
+
+  # Route-specific plugins
+  plugins:
+    - name: triage-jwt-validation
+      config:
+        # Require JWT for this route
+        run_on: first
+        fault_tolerant: false
+
+    - name: triage-rate-limiting
+      config:
+        minute: 100
+        limit_by: consumer
+        policy: redis
+
+    - name: cors
+      config:
+        origins:
+          - https://learnflow.edu
+          - https://app.learnflow.edu
+        methods:
+          - POST
+          - GET
+          - OPTIONS
+        headers:
+          - Accept
+          - Content-Type
+          - Authorization
+          - X-Request-ID
+        credentials: true
+        max_age: 86400
+        preflight_continue: false
+
+    - name: request-validator
+      config:
+        body_schema: |
+          {
+            "type": "object",
+            "properties": {
+              "query": { "type": "string", "minLength": 1, "maxLength": 1000 },
+              "request_id": { "type": "string" },
+              "student_progress": { "type": ["object", "null"] }
+            },
+            "required": ["query"]
+          }
+        allowed_content_types:
+          - application/json
+        verbose: false
+
+---
+# Route Monitoring and Logging
+apiVersion: configuration.konghq.com/v1
+kind: KongRoutePlugin
+metadata:
+  name: triage-route-monitoring
+  namespace: learnflow
+spec:
+  route: triage-route
+  plugins:
+    - name: file-log
+      config:
+        path: /var/log/kong/triage-access.log
+        reopen: true
+
+    - name: prometheus
+      config:
+        per_consumer: true
+        status_code_metrics: true
+        latency_metrics: true
+        bandwidth_metrics: true
+        upstream_health_metrics: true
+
+---
+# Advanced Security: Bot Detection and IP Reputation
+apiVersion: configuration.konghq.com/v1
+kind: KongRoutePlugin
+metadata:
+  name: triage-security-enhanced
+  namespace: learnflow
+spec:
+  route: triage-route
+  plugins:
+    - name: bot-detection
+      config:
+        allow:
+          - learnflow-bot
+        deny:
+          - malicious-bot
+          - scanner
+
+    - name: rate-limiting
+      config:
+        minute: 1000  # Stricter global limit
+        hour: 10000
+        limit_by: ip
+        fault_tolerant: true
+        policy: redis
+        redis_host: redis.learflow.svc.cluster.local
+        redis_port: 6379

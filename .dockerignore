@@ -1,39 +1,37 @@
-# Docker ignore file for LearnFlow platform
+# Docker ignore file for LearnFlow Triage Service
 
 # Python
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
+*.py[cod]
+*.class
+*.so
 .Python
-venv/
 env/
-.venv/
-pip-log.txt
-pip-delete-this-directory.txt
-.tox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.log
-.git
-.mypy_cache
-.pytest_cache
-
-# JavaScript/TypeScript/Next.js
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.next/
-dist/
+venv/
+ENV/
 build/
-.coverage
-.istanbul/
-*.tsbuildinfo
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+.Python
+env/
+venv/
+ENV/
 
 # IDE
 .vscode/
@@ -46,49 +44,209 @@ build/
 .DS_Store
 Thumbs.db
 
-# Kubernetes/Infrastructure
-*.secret.yaml
-secrets/
-.kube/
-kubeconfig*
-*.key
-*.crt
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
 
 # Logs
 *.log
 logs/
 
-# Environment files (security)
+# Docker
+Dockerfile
+.dockerignore
+docker-compose.yml
+docker-compose.override.yml
+
+# Environment variables
 .env
 .env.local
 .env.*.local
 
-# Testing
-coverage/
-junit.xml
-test-results/
+# Generated files
+*.generated.py
+*.generated.yaml
+
+# Node (for frontend)
+node_modules/
+npm-debug.log*
 
 # Build artifacts
+dist/
+build/
+*.whl
 *.tar.gz
-*.zip
-*.egg-info/
 
-# Development
+# Secrets
+secrets/
+*.key
+*.pem
+*.crt
+*.cer
+
+# Cache
+.cache/
 .mypy_cache/
 .pytest_cache/
-.flake8
-.pylintrc
+__pycache__/
 
-# Documentation (generated)
+# Local development
+local/
+dev/
+test/
+
+# Documentation
+docs/
+README.md
+
+# Git
+.git/
+.gitignore
+
+# Scripts (except verification)
+scripts/
+!scripts/verify-triage-logic.py
+
+# Python cache
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+
+# IDE files
+*.sublime-project
+*.sublime-workspace
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# OS generated
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# Virtual environments
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+.nosetests
+.coverage.*
+.tox/
+
+# Coverage
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+
+# Translations
+*.mo
+*.pot
+
+# Django
+*.log
+local_settings.py
+
+# Flask
+instance/
+.webassets-cache
+
+# Scrapy
+.scrapy
+
+# Sphinx
 docs/_build/
-docs/generated/
 
-# Kafka/Dapr temporary files
-kafka-data/
-dapr-data/
-redis-data/
-postgres-data/
+# PyBuilder
+target/
 
-# Skills library (if present)
-skills-library/**/*.pyc
-skills-library/**/__pycache__/
+# Jupyter
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# celery
+celerybeat-schedule
+
+# SageMath
+*.sage.py
+
+# Environments
+.env
+.venv
+.env.*
+venv
+ENV/
+
+# Spyder
+.spyderproject
+.spyproject
+
+# Rope
+.ropeproject
+
+# mkdocs
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# pytype
+.pytype/
+
+# Cython
+cython_debug/
+
+# Poetry
+poetry.lock
+
+# Pipfile
+Pipfile.lock
+
+# IDE workspace
+*.code-workspace
+
+# Local configs
+config/local/
+config/dev/
+config/test/
+
+# Benchmark
+benchmarks/results/
+performance/results/
+
+# Test reports
+test-results/
+junit.xml
+
+# Security scanning
+*.sarif
+*.bom
+
+# Project specific
+backend/*/data/
+backend/*/storage/
+skills-library/*/cache/
+skills-library/*/data/
+
+# Ignore everything except what's needed for builds

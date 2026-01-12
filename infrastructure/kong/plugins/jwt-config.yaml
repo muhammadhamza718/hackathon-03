@@ -1,0 +1,104 @@
+# Kong JWT Plugin Configuration
+# Elite Implementation Standard v2.0.0
+#
+# JWT validation at edge: Extracts student_id from 'sub' claim
+# Propagates to triage-service via X-Consumer-Username header
+
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: triage-jwt-validation
+  namespace: learnflow
+plugin: jwt
+config:
+  # Key claims to extract
+  key_claim_name: "kid"
+  secret_is_base64: false
+
+  # Algorithm validation
+  algorithms:
+    - RS256
+    - HS256
+
+  # Required claims
+  required_claims:
+    - sub
+    - exp
+    - role
+
+  # Run before other plugins
+  run_on: first
+
+  # Error handling
+  fault_tolerant: false
+
+  # Forward JWT claims to upstream
+  forward_jwt: true
+
+  # Headers to inject
+  headers_to_forward:
+    - X-Consumer-Username  # Maps to 'sub' claim
+    - X-Consumer-ID        # Maps to consumer ID
+    - X-JWT-Claims         # Full claims as JSON
+
+---
+# Consumer mapping for JWT validation
+# In production, this would be managed via Kong Admin API
+#
+# Example consumer setup:
+# curl -X POST http://kong:8001/consumers \
+#   --data "username=student-123" \
+#   --data "custom_id=student_123_uuid"
+#
+# curl -X POST http://kong:8001/consumers/student-123/jwt \
+#   --data "algorithm=RS256" \
+#   --data "key=<public_key>"
+
+# JWT credentials would be created per student:
+# {
+#   "key": "<student-specific-key>",
+#   "algorithm": "RS256",
+#   "consumer": { "id": "<consumer-uuid>" }
+# }
+
+---
+# Rate limiting for JWT authenticated requests
+# Protects against token replay attacks and abuse
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: triage-rate-limiting
+  namespace: learnflow
+plugin: rate-limiting
+config:
+  minute: 100  # 100 requests per minute per student
+  policy: redis  # Use Redis for distributed rate limiting
+  redis_host: redis.learflow.svc.cluster.local
+  redis_port: 6379
+  fault_tolerant: true
+  hide_client_headers: false
+  limit_by: consumer  # Rate limit by consumer (student)
+
+  # Error responses
+  errors:
+    - status: 429
+      message: "Rate limit exceeded. Please wait before making more requests."
+
+  # Headers to include
+  headers:
+    - X-RateLimit-Limit-Minute
+    - X-RateLimit-Remaining-Minute
+    - X-RateLimit-Reset
+
+---
+# Request size limiting to prevent large payload attacks
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: triage-size-limiting
+  namespace: learnflow
+plugin: request-size-limiting
+config:
+  allowed_payload_size: 1048576  # 1MB max payload
+  status: 413
+  message: "Request payload too large. Maximum size: 1MB"

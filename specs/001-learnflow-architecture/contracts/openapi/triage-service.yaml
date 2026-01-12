@@ -1,0 +1,348 @@
+openapi: 3.1.0
+info:
+  title: LearnFlow Triage Service API
+  version: 1.0.0
+  description: |
+    Intelligent routing service for LearnFlow multi-agent tutoring platform.
+    Handles intent classification and agent routing with comprehensive resilience.
+
+    **Milestone**: 2 - Routing Core (Triage Service)
+    **Authentication**: JWT via Kong Gateway required
+    **Rate Limiting**: 100 requests/minute per student
+
+servers:
+  - url: https://api.learnflow.com/v1/triage
+    description: Production
+  - url: https://staging.api.learnflow.com/v1/triage
+    description: Staging
+  - url: http://localhost:8000/v1/triage
+    description: Local Development
+
+paths:
+  /api/v1/triage:
+    post:
+      summary: Submit query for intent classification and routing
+      description: |
+        Main entry point for student queries. Validates input, classifies intent,
+        routes to appropriate agent, and logs complete audit trail.
+
+        **Processing Flow**:
+        1. JWT validation (via Kong)
+        2. Schema validation (Pydantic)
+        3. Intent classification (OpenAI Agent SDK)
+        4. Dapr service invocation with circuit breaker
+        5. Audit logging (async)
+
+        **Performance**: p95 <500ms, throughput 1000 RPS
+
+      security:
+        - jwtAuth: []
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TriageRequest'
+            examples:
+              syntaxHelp:
+                summary: Syntax error assistance
+                value:
+                  query: "I'm getting a 'SyntaxError: invalid syntax' on my for loop"
+                  student_progress:
+                    student_id: "student_12345678-1234-1234-1234-123456789012"
+                    exercise_id: "ex_python_loop_basics"
+                    completion_score: 0.75
+                    quiz_score: 0.8
+                    quality_score: 0.6
+                    consistency_score: 0.9
+                    timestamp: "2026-01-12T10:30:00Z"
+                    agent_source: "exercise"
+                  timestamp: "2026-01-12T10:30:05Z"
+              conceptExplanation:
+                summary: Concept explanation request
+                value:
+                  query: "What is polymorphism in object-oriented programming?"
+                  student_progress:
+                    student_id: "student_12345678-1234-1234-1234-123456789012"
+                    exercise_id: "ex_oop_basics"
+                    completion_score: 0.5
+                    timestamp: "2026-01-12T10:30:00Z"
+                    agent_source: "concepts"
+                  timestamp: "2026-01-12T10:30:05Z"
+
+      responses:
+        '200':
+          description: Successful routing decision
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoutingDecision'
+              examples:
+                success:
+                  summary: Debug agent routing
+                  value:
+                    target_agent: "debug-agent"
+                    intent_type: "syntax_help"
+                    confidence: 0.92
+                    student_id: "student_12345678-1234-1234-1234-123456789012"
+                    dapr_app_id: "debug-agent"
+                    metadata:
+                      priority: "high"
+                      retry_count: 0
+                      circuit_breaker_status: "closed"
+                    timestamp: "2026-01-12T10:30:05Z"
+
+        '400':
+          description: Schema validation failed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "schema_validation_failed"
+                  details:
+                    type: array
+                    items:
+                      type: string
+                    example: ["student_progress.completion_score: must be <= 1.0"]
+              examples:
+                validationError:
+                  summary: Invalid input schema
+                  value:
+                    error: "schema_validation_failed"
+                    details: ["query: field required", "timestamp: invalid format"]
+
+        '401':
+          description: Authentication failed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "invalid_jwt"
+                  message:
+                    type: string
+                    example: "Token validation failed"
+              examples:
+                authError:
+                  summary: Invalid or missing JWT
+                  value:
+                    error: "invalid_jwt"
+                    message: "Token validation failed: expired signature"
+
+        '422':
+          description: Intent classification failed (low confidence)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "low_confidence"
+                  fallback_agent:
+                    type: string
+                    example: "review-agent"
+                  confidence:
+                    type: number
+                    example: 0.45
+              examples:
+                lowConfidence:
+                  summary: Ambiguous query
+                  value:
+                    error: "low_confidence"
+                    fallback_agent: "review-agent"
+                    confidence: 0.45
+
+        '502':
+          description: Agent unavailable (circuit breaker open)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "agent_unavailable"
+                  circuit_breaker:
+                    type: string
+                    example: "open"
+                  fallback:
+                    type: string
+                    example: "dead_letter_queue"
+                  retry_after:
+                    type: integer
+                    example: 30
+              examples:
+                circuitBreaker:
+                  summary: All agents unavailable
+                  value:
+                    error: "agent_unavailable"
+                    circuit_breaker: "open"
+                    fallback: "dead_letter_queue"
+                    retry_after: 30
+
+        '503':
+          description: Service temporarily unavailable
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "service_unavailable"
+                  message:
+                    type: string
+                    example: "Intent classification service temporarily down"
+
+components:
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT token issued by LearnFlow Auth service.
+        Must contain 'sub' claim with student_id.
+        Validated by Kong Gateway before reaching service.
+
+  schemas:
+    TriageRequest:
+      type: object
+      required: [query, student_progress]
+      properties:
+        query:
+          type: string
+          minLength: 1
+          maxLength: 5000
+          description: Student's natural language query
+          example: "I'm getting a TypeError when calling my function"
+        student_progress:
+          $ref: '#/components/schemas/StudentProgress'
+        timestamp:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp of request
+          example: "2026-01-12T10:30:05Z"
+        session_context:
+          type: object
+          nullable: true
+          properties:
+            conversation_id:
+              type: string
+              format: uuid
+            turn_number:
+              type: integer
+              minimum: 0
+            previous_intent:
+              type: string
+              enum: [syntax_help, concept_explanation, exercise_request, progress_check]
+
+    StudentProgress:
+      type: object
+      required: [student_id, exercise_id, timestamp, agent_source]
+      properties:
+        student_id:
+          type: string
+          pattern: '^student_[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$'
+          example: "student_12345678-1234-1234-1234-123456789012"
+        exercise_id:
+          type: string
+          pattern: '^ex_[a-zA-Z0-9_-]+$'
+          example: "ex_python_loop_basics"
+        completion_score:
+          type: number
+          minimum: 0
+          maximum: 1
+          example: 0.75
+        quiz_score:
+          type: number
+          minimum: 0
+          maximum: 1
+          example: 0.8
+        quality_score:
+          type: number
+          minimum: 0
+          maximum: 1
+          example: 0.6
+        consistency_score:
+          type: number
+          minimum: 0
+          maximum: 1
+          example: 0.9
+        timestamp:
+          type: string
+          format: date-time
+        agent_source:
+          type: string
+          enum: [concepts, review, debug, exercise, progress]
+
+    RoutingDecision:
+      type: object
+      required: [target_agent, intent_type, confidence, student_id]
+      properties:
+        target_agent:
+          type: string
+          enum: [concepts-agent, review-agent, debug-agent, exercise-agent, progress-agent]
+          description: Target microservice agent
+          example: "debug-agent"
+        intent_type:
+          type: string
+          enum: [syntax_help, concept_explanation, exercise_request, progress_check]
+          example: "syntax_help"
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+          example: 0.92
+        student_id:
+          type: string
+          pattern: '^student_[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$'
+        dapr_app_id:
+          type: string
+          description: Dapr service invocation target
+          example: "debug-agent"
+        metadata:
+          type: object
+          properties:
+            priority:
+              type: string
+              enum: [high, medium, low]
+              example: "high"
+            retry_count:
+              type: integer
+              minimum: 0
+              maximum: 3
+              example: 0
+            circuit_breaker_status:
+              type: string
+              enum: [closed, open, half-open]
+              example: "closed"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2026-01-12T10:30:05Z"
+
+  headers:
+    X-Consumer-Username:
+      schema:
+        type: string
+      description: Student ID extracted from JWT by Kong Gateway
+
+tags:
+  - name: routing
+    description: Intent classification and agent routing
+  - name: validation
+    description: Schema and authentication validation
+  - name: resilience
+    description: Circuit breaker and retry patterns
+
+externalDocs:
+  description: LearnFlow Architecture Documentation
+  url: https://docs.learnflow.com/architecture/milestone-2

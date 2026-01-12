@@ -1,0 +1,79 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "title": "StudentProgress Event",
+  "description": "Event schema for student progress tracking via Kafka",
+  "required": [
+    "student_id",
+    "exercise_id",
+    "timestamp",
+    "agent_source"
+  ],
+  "properties": {
+    "student_id": {
+      "type": "string",
+      "pattern": "^student_[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+      "description": "UUID format student identifier - used for Kafka partitioning"
+    },
+    "exercise_id": {
+      "type": "string",
+      "pattern": "^ex_[a-zA-Z0-9_-]+$",
+      "description": "Unique exercise identifier with ex_ prefix"
+    },
+    "completion_score": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 1.0,
+      "description": "Normalized completion percentage (0.0-1.0)"
+    },
+    "quiz_score": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 1.0,
+      "description": "Normalized quiz performance (0.0-1.0)"
+    },
+    "quality_score": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 1.0,
+      "description": "Code quality assessment (0.0-1.0)"
+    },
+    "consistency_score": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 1.0,
+      "description": "Learning consistency metric (0.0-1.0)"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp in UTC"
+    },
+    "agent_source": {
+      "type": "string",
+      "enum": [
+        "concepts",
+        "review",
+        "debug",
+        "exercise",
+        "progress"
+      ],
+      "description": "Origin agent of the event"
+    },
+    "idempotency_key": {
+      "type": [
+        "null",
+        "string"
+      ],
+      "pattern": "^[a-f0-9]{32}$",
+      "description": "32-character hex idempotency key for deduplication"
+    },
+    "metadata": {
+      "type": [
+        "null",
+        "object"
+      ],
+      "description": "Agent-specific additional data"
+    }
+  }
+}

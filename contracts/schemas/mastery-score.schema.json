@@ -1,0 +1,140 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "title": "Mastery Score",
+  "description": "Mastery score calculation and storage schema",
+  "required": [
+    "student_id",
+    "date",
+    "components",
+    "final_score",
+    "calculated_at"
+  ],
+  "properties": {
+    "student_id": {
+      "type": "string",
+      "pattern": "^student_[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+      "description": "UUID format student identifier"
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "Calculation date in YYYY-MM-DD format"
+    },
+    "components": {
+      "type": "object",
+      "description": "Component scores breakdown",
+      "required": [
+        "completion",
+        "quiz",
+        "quality",
+        "consistency"
+      ],
+      "properties": {
+        "completion": {
+          "type": "object",
+          "required": [
+            "value",
+            "count",
+            "last_updated"
+          ],
+          "properties": {
+            "value": {
+              "type": "number",
+              "minimum": 0.0,
+              "maximum": 1.0
+            },
+            "count": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "last_updated": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        },
+        "quiz": {
+          "type": "object",
+          "required": [
+            "value",
+            "count",
+            "last_updated"
+          ],
+          "properties": {
+            "value": {
+              "type": "number",
+              "minimum": 0.0,
+              "maximum": 1.0
+            },
+            "count": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "last_updated": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        },
+        "quality": {
+          "type": "object",
+          "required": [
+            "value",
+            "count",
+            "last_updated"
+          ],
+          "properties": {
+            "value": {
+              "type": "number",
+              "minimum": 0.0,
+              "maximum": 1.0
+            },
+            "count": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "last_updated": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        },
+        "consistency": {
+          "type": "object",
+          "required": [
+            "value",
+            "count",
+            "last_updated"
+          ],
+          "properties": {
+            "value": {
+              "type": "number",
+              "minimum": 0.0,
+              "maximum": 1.0
+            },
+            "count": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "last_updated": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        }
+      }
+    },
+    "final_score": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 1.0,
+      "description": "Calculated mastery: 0.4*completion + 0.3*quiz + 0.2*quality + 0.1*consistency"
+    },
+    "calculated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When mastery was calculated"
+    }
+  }
+}

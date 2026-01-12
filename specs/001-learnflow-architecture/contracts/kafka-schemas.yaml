@@ -1,0 +1,164 @@
+# Kafka Event Schemas for LearnFlow Platform
+# Topic: learning.events
+# Format: Avro with JSON Schema compatibility
+
+# StudentProgress Event Schema (Primary)
+# Topic: learning.events
+# Partition Key: student_id
+StudentProgressEvent:
+  type: record
+  name: StudentProgressEvent
+  namespace: learnflow.events
+  fields:
+    - name: student_id
+      type: string
+      doc: "UUID format student identifier"
+    - name: exercise_id
+      type: string
+      doc: "Unique exercise identifier (ex_ prefix)"
+    - name: completion_score
+      type: float
+      doc: "Normalized completion percentage (0.0-1.0)"
+      logicalType: decimal
+    - name: quiz_score
+      type: float
+      doc: "Normalized quiz performance (0.0-1.0)"
+      logicalType: decimal
+    - name: quality_score
+      type: float
+      doc: "Code quality assessment (0.0-1.0)"
+      logicalType: decimal
+    - name: consistency_score
+      type: float
+      doc: "Learning consistency metric (0.0-1.0)"
+      logicalType: decimal
+    - name: timestamp
+      type: string
+      doc: "ISO 8601 timestamp in UTC"
+      logicalType: timestamp-millis
+    - name: agent_source
+      type: enum
+      symbols: [concepts, review, debug, exercise, progress]
+      doc: "Origin agent of the event"
+    - name: idempotency_key
+      type: [null, string]
+      default: null
+      doc: "32-character hex idempotency key for deduplication"
+    - name: metadata
+      type: [null, map]
+      default: null
+      doc: "Agent-specific additional data"
+
+# Mastery Score Update Event
+# Topic: learning.events (subset of StudentProgressEvent)
+MasteryScoreUpdate:
+  type: record
+  name: MasteryScoreUpdate
+  namespace: learnflow.events
+  fields:
+    - name: student_id
+      type: string
+    - name: date
+      type: string
+      logicalType: date
+    - name: components
+      type: map
+      values:
+        type: record
+        name: ComponentData
+        fields:
+          - name: value
+            type: float
+          - name: count
+            type: int
+          - name: last_updated
+            type: string
+            logicalType: timestamp-millis
+    - name: final_score
+      type: float
+    - name: calculated_at
+      type: string
+      logicalType: timestamp-millis
+
+# Dead Letter Queue Event
+# Topic: dead-letter.queue
+DeadLetterEvent:
+  type: record
+  name: DeadLetterEvent
+  namespace: learnflow.events
+  fields:
+    - name: original_topic
+      type: string
+    - name: original_partition
+      type: int
+    - name: original_offset
+      type: long
+    - name: failed_event
+      type: string
+      doc: "JSON string of original event"
+    - name: error_message
+      type: string
+    - name: error_type
+      type: string
+    - name: failed_at
+      type: string
+      logicalType: timestamp-millis
+    - name: agent_source
+      type: [null, string]
+      default: null
+
+# Sandbox Execution Result Event
+# Topic: learning.events
+SandboxExecutionEvent:
+  type: record
+  name: SandboxExecutionEvent
+  namespace: learnflow.events
+  fields:
+    - name: student_id
+      type: string
+    - name: exercise_id
+      type: string
+    - name: status
+      type: enum
+      symbols: [success, timeout, error, memory_exceeded]
+    - name: execution_time_ms
+      type: int
+    - name: peak_memory_mb
+      type: float
+    - name: timestamp
+      type: string
+      logicalType: timestamp-millis
+    - name: metadata
+      type: [null, map]
+      default: null
+
+# Kafka Topic Configuration
+topics:
+  - name: learning.events
+    partitions: 12
+    replication_factor: 3
+    config:
+      retention.ms: 604800000  # 7 days
+      compression.type: snappy
+      min.insync.replicas: 2
+
+  - name: dead-letter.queue
+    partitions: 6
+    replication_factor: 3
+    config:
+      retention.ms: 2592000000  # 30 days
+      compression.type: gzip
+
+# Schema Registry Compatibility
+compatibility:
+  learning.events: BACKWARD
+  dead-letter.queue: BACKWARD
+
+# Consumer Group IDs
+consumer_groups:
+  triage_service: "learnflow-triage-v1"
+  progress_agent: "learnflow-progress-v1"
+  concepts_agent: "learnflow-concepts-v1"
+  review_agent: "learnflow-review-v1"
+  debug_agent: "learnflow-debug-v1"
+  exercise_agent: "learnflow-exercise-v1"

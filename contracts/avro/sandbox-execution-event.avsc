@@ -1,0 +1,41 @@
+{
+  "type": "record",
+  "name": "SandboxExecutionEvent",
+  "namespace": "learnflow.events",
+  "fields": [
+    {
+      "name": "student_id",
+      "type": "string"
+    },
+    {
+      "name": "exercise_id",
+      "type": "string"
+    },
+    {
+      "name": "status",
+      "type": {
+        "type": "enum",
+        "name": "SandboxStatus",
+        "symbols": ["success", "timeout", "error", "memory_exceeded"]
+      }
+    },
+    {
+      "name": "execution_time_ms",
+      "type": "int"
+    },
+    {
+      "name": "peak_memory_mb",
+      "type": "float"
+    },
+    {
+      "name": "timestamp",
+      "type": "string",
+      "logicalType": "timestamp-millis"
+    },
+    {
+      "name": "metadata",
+      "type": ["null", "map"],
+      "default": null
+    }
+  ]
+}

@@ -1,0 +1,472 @@
+# LearnFlow API Contracts - OpenAPI 3.0 Specification
+# Generated: 2025-01-11
+# Feature: 001-learnflow-architecture
+
+openapi: 3.0.3
+info:
+  title: LearnFlow Multi-Agent AI Tutoring Platform API
+  description: Distributed AI tutoring platform with Dapr service mesh and Kafka event streaming
+  version: 1.0.0
+  contact:
+    name: LearnFlow Architecture Team
+    email: architecture@learnflow.ai
+  license:
+    name: MIT
+servers:
+  - url: https://api.learnflow.local/v1
+    description: Development server
+  - url: https://api.learnflow.ai/v1
+    description: Production server
+
+tags:
+  - name: Triage
+    description: Query routing and intent detection
+  - name: Agents
+    description: Specialized tutoring agents
+  - name: Sandbox
+    description: Secure code execution
+  - name: Progress
+    description: Mastery tracking and analytics
+
+paths:
+  # Triage Service Endpoints
+  /triage/intent/detect:
+    post:
+      tags: [Triage]
+      summary: Detect intent from student query
+      operationId: detectIntent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IntentRequest'
+            example:
+              student_id: "student_123e4567-e89b-12d3-a456-426614174000"
+              query: "Why does my Fibonacci function cause a stack overflow?"
+              context:
+                previous_exercise: "ex_python_recursion"
+                error_count: 2
+      responses:
+        '200':
+          description: Intent successfully detected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntentResponse'
+        '400':
+          description: Invalid input or unable to detect intent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /triage/route:
+    post:
+      tags: [Triage]
+      summary: Route query to appropriate agent
+      operationId: routeQuery
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RouteRequest'
+      responses:
+        '200':
+          description: Query routed and processed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RouteResponse'
+        '400':
+          description: Routing failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # Agent Endpoints
+  /agents/{agent_name}/process:
+    post:
+      tags: [Agents]
+      summary: Process request in specialized agent
+      operationId: processAgent
+      parameters:
+        - name: agent_name
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [concepts, review, debug, exercise, progress]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentRequest'
+      responses:
+        '200':
+          description: Agent processing complete
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentResponse'
+        '400':
+          description: Agent processing failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # Sandbox Endpoints
+  /sandbox/execute/python:
+    post:
+      tags: [Sandbox]
+      summary: Execute Python code in secure sandbox
+      operationId: executePython
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SandboxRequest'
+            example:
+              code: "def fibonacci(n):\n    if n <= 1:\n        return n\n    return fibonacci(n-1) + fibonacci(n-2)\n\nprint(fibonacci(10))"
+              student_id: "student_123e4567-e89b-12d3-a456-426614174000"
+              exercise_id: "ex_python_fibonacci"
+              timeout_ms: 5000
+              memory_limit_mb: 50
+      responses:
+        '200':
+          description: Execution completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SandboxResponse'
+        '422':
+          description: Code execution failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # Progress Agent Endpoints
+  /agents/progress/mastery/{student_id}:
+    get:
+      tags: [Progress]
+      summary: Get current mastery scores for student
+      operationId: getMastery
+      parameters:
+        - name: student_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Mastery scores retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MasteryScore'
+        '404':
+          description: Student not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /agents/progress/mastery/calculate:
+    post:
+      tags: [Progress]
+      summary: Calculate mastery from progress events
+      operationId: calculateMastery
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MasteryCalculationRequest'
+      responses:
+        '200':
+          description: Calculation complete
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MasteryCalculationResponse'
+
+components:
+  schemas:
+    # Base Types
+    UUID:
+      type: string
+      format: uuid
+      pattern: "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+
+    IdempotencyKey:
+      type: string
+      pattern: "^[a-f0-9]{32}$"
+      description: 32-character hex idempotency key
+
+    Timestamp:
+      type: string
+      format: date-time
+      description: ISO 8601 UTC timestamp
+
+    Score:
+      type: number
+      minimum: 0.0
+      maximum: 1.0
+      description: Normalized score 0.0-1.0
+
+    # Intent Detection
+    IntentRequest:
+      type: object
+      required: [student_id, query]
+      properties:
+        student_id:
+          $ref: '#/components/schemas/UUID'
+        query:
+          type: string
+          maxLength: 1000
+        context:
+          type: object
+          additionalProperties: true
+
+    IntentResponse:
+      type: object
+      properties:
+        intent:
+          type: string
+          enum: [syntax_error, concept_explanation, code_review, exercise, progress_query]
+        confidence:
+          type: number
+          minimum: 0.0
+          maximum: 1.0
+        target_agent:
+          type: string
+          enum: [debug, concepts, review, exercise, progress]
+        routing_metadata:
+          type: object
+          additionalProperties: true
+
+    # Routing
+    RouteRequest:
+      type: object
+      required: [student_id, query, idempotency_key]
+      properties:
+        student_id:
+          $ref: '#/components/schemas/UUID'
+        query:
+          type: string
+        idempotency_key:
+          $ref: '#/components/schemas/IdempotencyKey'
+        context:
+          type: object
+
+    RouteResponse:
+      type: object
+      properties:
+        response:
+          type: string
+        agent:
+          type: string
+        processing_time_ms:
+          type: integer
+        events_published:
+          type: array
+          items:
+            type: string
+
+    # Agent Processing
+    AgentRequest:
+      type: object
+      required: [student_id, input_data]
+      properties:
+        student_id:
+          $ref: '#/components/schemas/UUID'
+        input_data:
+          type: object
+          description: Agent-specific input schema
+        idempotency_key:
+          $ref: '#/components/schemas/IdempotencyKey'
+
+    AgentResponse:
+      type: object
+      properties:
+        result:
+          type: object
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/StudentProgressEvent'
+
+    # Sandbox
+    SandboxRequest:
+      type: object
+      required: [code, student_id]
+      properties:
+        code:
+          type: string
+          maxLength: 10000
+        student_id:
+          $ref: '#/components/schemas/UUID'
+        exercise_id:
+          type: string
+        timeout_ms:
+          type: integer
+          minimum: 1000
+          maximum: 10000
+          default: 5000
+        memory_limit_mb:
+          type: integer
+          minimum: 10
+          maximum: 100
+          default: 50
+        requirements:
+          type: array
+          items:
+            type: string
+
+    SandboxResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [success, timeout, error, memory_exceeded]
+        output:
+          type: string
+        errors:
+          type: string
+        execution_time_ms:
+          type: integer
+        peak_memory_mb:
+          type: number
+
+    # Student Progress Event
+    StudentProgressEvent:
+      type: object
+      required: [student_id, exercise_id, timestamp, agent_source]
+      properties:
+        student_id:
+          $ref: '#/components/schemas/UUID'
+        exercise_id:
+          type: string
+          pattern: "^ex_[a-zA-Z0-9_-]+$"
+        completion_score:
+          $ref: '#/components/schemas/Score'
+        quiz_score:
+          $ref: '#/components/schemas/Score'
+        quality_score:
+          $ref: '#/components/schemas/Score'
+        consistency_score:
+          $ref: '#/components/schemas/Score'
+        timestamp:
+          $ref: '#/components/schemas/Timestamp'
+        agent_source:
+          type: string
+          enum: [concepts, review, debug, exercise, progress]
+        idempotency_key:
+          $ref: '#/components/schemas/IdempotencyKey'
+        metadata:
+          type: object
+          additionalProperties: true
+
+    # Mastery Score
+    MasteryScore:
+      type: object
+      required: [student_id, date, components, final_score, calculated_at]
+      properties:
+        student_id:
+          $ref: '#/components/schemas/UUID'
+        date:
+          type: string
+          format: date
+        components:
+          type: object
+          properties:
+            completion:
+              $ref: '#/components/schemas/ComponentScore'
+            quiz:
+              $ref: '#/components/schemas/ComponentScore'
+            quality:
+              $ref: '#/components/schemas/ComponentScore'
+            consistency:
+              $ref: '#/components/schemas/ComponentScore'
+        final_score:
+          $ref: '#/components/schemas/Score'
+        calculated_at:
+          $ref: '#/components/schemas/Timestamp'
+        version:
+          type: integer
+
+    ComponentScore:
+      type: object
+      required: [value, count, last_updated]
+      properties:
+        value:
+          $ref: '#/components/schemas/Score'
+        count:
+          type: integer
+          minimum: 1
+        last_updated:
+          $ref: '#/components/schemas/Timestamp'
+
+    # Mastery Calculation
+    MasteryCalculationRequest:
+      type: object
+      required: [student_id, events]
+      properties:
+        student_id:
+          $ref: '#/components/schemas/UUID'
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/StudentProgressEvent'
+
+    MasteryCalculationResponse:
+      type: object
+      properties:
+        calculated_score:
+          $ref: '#/components/schemas/Score'
+        breakdown:
+          type: object
+          properties:
+            completion:
+              type: number
+            quiz:
+              type: number
+            quality:
+              type: number
+            consistency:
+              type: number
+
+    # Error Response
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: object
+              additionalProperties: true
+            timestamp:
+              $ref: '#/components/schemas/Timestamp'
+
+  securitySchemes:
+    JWTAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token for student authentication
+
+security:
+  - JWTAuth: []

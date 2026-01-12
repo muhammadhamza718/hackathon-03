@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: dapr-operator
+  name: dapr-operator
+  namespace: dapr-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dapr-operator
+  template:
+    metadata:
+      labels:
+        app: dapr-operator
+    spec:
+      containers:
+      - command:
+        - /daprd
+        - --mode
+        - kubernetes
+        image: daprio/dapr:1.12.0
+        name: dapr-operator
+        ports:
+        - containerPort: 3500
+          name: http
+        - containerPort: 50001
+          name: grpc
+        resources:
+          limits:
+            cpu: 500m
+            memory: 200Mi
+          requests:
+            cpu: 100m
+            memory: 100Mi

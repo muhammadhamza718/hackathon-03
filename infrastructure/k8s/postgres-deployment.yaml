@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: postgresql
+  name: postgresql
+  namespace: learnflow
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgresql
+  serviceName: postgresql
+  template:
+    metadata:
+      labels:
+        app: postgresql
+    spec:
+      containers:
+      - env:
+        - name: POSTGRES_DB
+          value: learnflow
+        - name: POSTGRES_USER
+          value: learnflow_user
+        - name: POSTGRES_PASSWORD
+          value: learnflow_password_123
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
+        image: postgres:15-alpine
+        livenessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - learnflow_user
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        name: postgresql
+        ports:
+        - containerPort: 5432
+          name: postgres
+        readinessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - learnflow_user
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          limits:
+            cpu: 500m
+            memory: 512Mi
+          requests:
+            cpu: 250m
+            memory: 256Mi
+        volumeMounts:
+        - mountPath: /var/lib/postgresql/data
+          name: postgres-data
+  volumeClaimTemplates:
+  - metadata:
+      name: postgres-data
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 5Gi

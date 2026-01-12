@@ -1,0 +1,95 @@
+{
+  "type": "record",
+  "name": "StudentProgressEvent",
+  "namespace": "learnflow.events",
+  "fields": [
+    {
+      "name": "student_id",
+      "type": "string",
+      "doc": "UUID format student identifier - used for Kafka partitioning"
+    },
+    {
+      "name": "exercise_id",
+      "type": "string",
+      "doc": "Unique exercise identifier with ex_ prefix"
+    },
+    {
+      "name": "completion_score",
+      "type": [
+        "null",
+        "float"
+      ],
+      "doc": "Normalized completion percentage (0.0-1.0)",
+      "logicalType": "decimal",
+      "default": null
+    },
+    {
+      "name": "quiz_score",
+      "type": [
+        "null",
+        "float"
+      ],
+      "doc": "Normalized quiz performance (0.0-1.0)",
+      "logicalType": "decimal",
+      "default": null
+    },
+    {
+      "name": "quality_score",
+      "type": [
+        "null",
+        "float"
+      ],
+      "doc": "Code quality assessment (0.0-1.0)",
+      "logicalType": "decimal",
+      "default": null
+    },
+    {
+      "name": "consistency_score",
+      "type": [
+        "null",
+        "float"
+      ],
+      "doc": "Learning consistency metric (0.0-1.0)",
+      "logicalType": "decimal",
+      "default": null
+    },
+    {
+      "name": "timestamp",
+      "type": "string",
+      "doc": "ISO 8601 timestamp in UTC",
+      "logicalType": "timestamp-millis"
+    },
+    {
+      "name": "agent_source",
+      "type": {
+        "type": "enum",
+        "name": "StudentProgressEvent_agent_source_enum",
+        "symbols": [
+          "concepts",
+          "review",
+          "debug",
+          "exercise",
+          "progress"
+        ]
+      },
+      "doc": "Origin agent of the event"
+    },
+    {
+      "name": "idempotency_key",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    },
+    {
+      "name": "metadata",
+      "type": [
+        "null",
+        "record"
+      ],
+      "default": null
+    }
+  ],
+  "doc": "Event schema for student progress tracking via Kafka"
+}

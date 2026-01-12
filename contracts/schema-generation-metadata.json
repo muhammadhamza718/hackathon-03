@@ -1,0 +1,12 @@
+{
+  "skill": "schema-generator",
+  "timestamp": "2026-01-12T19:46:57.902752",
+  "output_files": [
+    "contracts/schemas/student-progress.schema.json",
+    "contracts/schemas/mastery-score.schema.json",
+    "contracts/schemas/idempotency-key.schema.json",
+    "contracts/avro/student-progress-event.avsc",
+    "contracts/avro/mastery-score-update.avsc"
+  ],
+  "token_efficiency": "95%"
+}

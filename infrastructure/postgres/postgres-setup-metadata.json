@@ -1,0 +1,15 @@
+{
+  "skill": "postgres-k8s-setup",
+  "timestamp": "2026-01-12T19:41:24.775116",
+  "output_files": [
+    "infrastructure/k8s/postgres-deployment.yaml",
+    "infrastructure/k8s/postgres-service.yaml",
+    "infrastructure/postgres/init.sql"
+  ],
+  "config": {
+    "database": "learnflow",
+    "user": "learnflow_user",
+    "tablespace": "5Gi"
+  },
+  "token_efficiency": "90%"
+}

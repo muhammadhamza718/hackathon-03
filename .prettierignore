@@ -1,0 +1,39 @@
+# Prettier ignore file for LearnFlow
+
+# Build artifacts
+dist/
+build/
+.next/
+out/
+
+# Dependencies
+node_modules/
+
+# Coverage
+coverage/
+
+# Logs
+*.log
+logs/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Lock files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Generated files
+*.min.js
+*.min.css
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

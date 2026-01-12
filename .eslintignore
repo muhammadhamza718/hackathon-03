@@ -1,0 +1,42 @@
+# ESLint ignore file for LearnFlow frontend
+
+# Build artifacts
+dist/
+build/
+.next/
+out/
+
+# Dependencies
+node_modules/
+
+# Coverage
+coverage/
+.nyc_output/
+
+# Logs
+*.log
+logs/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Test artifacts
+junit.xml
+test-results/
+
+# Generated files
+*.generated.ts
+*.generated.js

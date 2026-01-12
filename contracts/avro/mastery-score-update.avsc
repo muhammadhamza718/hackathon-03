@@ -1,0 +1,36 @@
+{
+  "type": "record",
+  "name": "MasteryScoreUpdate",
+  "namespace": "learnflow.events",
+  "fields": [
+    {
+      "name": "student_id",
+      "type": "string",
+      "doc": "UUID format student identifier"
+    },
+    {
+      "name": "date",
+      "type": "string",
+      "doc": "Calculation date in YYYY-MM-DD format",
+      "logicalType": "date"
+    },
+    {
+      "name": "components",
+      "type": "record",
+      "doc": "Component scores breakdown"
+    },
+    {
+      "name": "final_score",
+      "type": "float",
+      "doc": "Calculated mastery: 0.4*completion + 0.3*quiz + 0.2*quality + 0.1*consistency",
+      "logicalType": "decimal"
+    },
+    {
+      "name": "calculated_at",
+      "type": "string",
+      "doc": "When mastery was calculated",
+      "logicalType": "timestamp-millis"
+    }
+  ],
+  "doc": "Mastery score calculation and storage schema"
+}

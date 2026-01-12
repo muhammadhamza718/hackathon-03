@@ -1,0 +1,52 @@
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: service-invocation-config
+  namespace: learnflow
+spec:
+  type: middleware.http.routeralias
+  version: v1
+  metadata:
+  - name: routes
+    value: |
+      {
+        "triage-service": "triage-service:8000",
+        "progress-agent": "progress-agent:8000",
+        "concepts-agent": "concepts-agent:8000",
+        "review-agent": "review-agent:8000",
+        "debug-agent": "debug-agent:8000",
+        "exercise-agent": "exercise-agent:8000",
+        "sandbox-service": "sandbox-service:8000"
+      }
+  - name: circuitBreaker
+    value: "true"
+  - name: timeout
+    value: "5s"
+  - name: maxRetries
+    value: "3"
+  - name: backoffPattern
+    value: "exponential"
+  - name: initialInterval
+    value: "100ms"
+  - name: maxInterval
+    value: "1s"
+  - name: maxElapsedTime
+    value: "30s"
+
+---
+apiVersion: dapr.io/v1alpha1
+kind: Configuration
+metadata:
+  name: dapr-config
+  namespace: learnflow
+spec:
+  tracing:
+    samplingRate: "1"
+    zipkin:
+      endpointAddress: "http://zipkin:9411/api/v2/spans"
+  logging:
+    level: info
+  metrics:
+    enabled: true
+  tracing:
+    enabled: true

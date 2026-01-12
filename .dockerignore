@@ -1,0 +1,94 @@
+# Docker ignore file for LearnFlow platform
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+env/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.git
+.mypy_cache
+.pytest_cache
+
+# JavaScript/TypeScript/Next.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.next/
+dist/
+build/
+.coverage
+.istanbul/
+*.tsbuildinfo
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Kubernetes/Infrastructure
+*.secret.yaml
+secrets/
+.kube/
+kubeconfig*
+*.key
+*.crt
+
+# Logs
+*.log
+logs/
+
+# Environment files (security)
+.env
+.env.local
+.env.*.local
+
+# Testing
+coverage/
+junit.xml
+test-results/
+
+# Build artifacts
+*.tar.gz
+*.zip
+*.egg-info/
+
+# Development
+.mypy_cache/
+.pytest_cache/
+.flake8
+.pylintrc
+
+# Documentation (generated)
+docs/_build/
+docs/generated/
+
+# Kafka/Dapr temporary files
+kafka-data/
+dapr-data/
+redis-data/
+postgres-data/
+
+# Skills library (if present)
+skills-library/**/*.pyc
+skills-library/**/__pycache__/

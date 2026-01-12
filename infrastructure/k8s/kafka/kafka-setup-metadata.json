@@ -1,0 +1,19 @@
+{
+  "skill": "kafka-k8s-setup",
+  "timestamp": "2026-01-12T19:38:49.421919",
+  "output_files": [
+    "infrastructure/k8s/kafka/kafka-statefulset.yaml",
+    "infrastructure/k8s/kafka/kafka-service.yaml",
+    "infrastructure/k8s/kafka/kafka-topics-job.yaml"
+  ],
+  "config": {
+    "cluster_name": "learnflow-kafka",
+    "partitions": 12,
+    "replication_factor": 3,
+    "topics": [
+      "learning.events",
+      "dead-letter.queue"
+    ]
+  },
+  "token_efficiency": "92%"
+}

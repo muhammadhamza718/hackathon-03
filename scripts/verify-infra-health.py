@@ -123,11 +123,24 @@ def main():
     parser.add_argument("--service", choices=["kafka", "dapr", "postgres", "schemas", "all"],
                        default="all", help="Service to check")
     parser.add_argument("--check", help="Specific check to perform")
+    parser.add_argument("--full-suite", action="store_true", help="Run the full health check suite (alias for --service all)")
 
     args = parser.parse_args()
 
+    # If --full-suite is used, set service to all
+    if args.full_suite:
+        args.service = "all"
+
     print(f"LearnFlow Infrastructure Health Check")
     print("=" * 50)
+
+    # Check Kubernetes connectivity first
+    print("Checking Kubernetes Connectivity...")
+    k8s_check = os.system("kubectl cluster-info > nul 2>&1") if os.name == 'nt' else os.system("kubectl cluster-info > /dev/null 2>&1")
+    if k8s_check != 0:
+        print("WARNING: Cannot connect to Kubernetes cluster (Minikube).")
+        print("Please ensure Minikube is running: 'minikube start'")
+        print("-" * 50)
 
     results = {}
 

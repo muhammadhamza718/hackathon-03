@@ -459,149 +459,149 @@ Phase 4 (Concepts Agent) → Phase 5 (Exercise Agent) → Phase 6 (Review Agent 
 
 ### 6.1 Review Agent Core Service
 
-- [ ] T092 [P] [US5] Create Review Agent FastAPI application
+- [x] T092 [P] [US5] Create Review Agent FastAPI application
       **Files**: `backend/review-agent/src/main.py`
       **Verify**: `python scripts/verify-agents.py --check-review-main`
 
-- [ ] T093 [P] [US5] Implement code assessment endpoint
+- [x] T093 [P] [US5] Implement code assessment endpoint
       **Files**: `backend/review-agent/src/api/endpoints/assess.py`
       **Verify**: `python scripts/verify-agents.py --check-assess-endpoint`
 
-- [ ] T094 [P] [US5] Implement hint generation endpoint
+- [x] T094 [P] [US5] Implement hint generation endpoint
       **Files**: `backend/review-agent/src/api/endpoints/hints.py`
       **Verify**: `python scripts/verify-agents.py --check-hints-endpoint`
 
-- [ ] T095 [P] [US5] Implement feedback endpoint
+- [x] T095 [P] [US5] Implement feedback endpoint
       **Files**: `backend/review-agent/src/api/endpoints/feedback.py`
       **Verify**: `python scripts/verify-agents.py --check-feedback-endpoint`
 
-- [ ] T096 [P] [US5] Integrate MCP code quality scoring script
+- [x] T096 [P] [US5] Integrate MCP code quality scoring script
       **Files**: `backend/review-agent/src/services/quality_scoring.py`
       **Verify**: `python scripts/verify-agents.py --check-quality-integration`
 
-- [ ] T097 [P] [US5] Integrate MCP hint generation script
+- [x] T097 [P] [US5] Integrate MCP hint generation script
       **Files**: `backend/review-agent/src/services/hint_generator.py`
       **Verify**: `python scripts/verify-agents.py --check-hint-integration`
 
-- [ ] T098 [US5] Create Kafka event consumer for review requests
+- [x] T098 [US5] Create Kafka event consumer for review requests
       **Files**: `backend/review-agent/src/services/kafka_consumer.py`
       **Verify**: `python scripts/verify-agents.py --check-review-consumer`
 
 ### 6.2 Review Agent Testing & Deployment
 
-- [ ] T099 [P] [US5] Write unit tests for quality scoring logic
+- [x] T099 [P] [US5] Write unit tests for quality scoring logic
       **Files**: `backend/review-agent/tests/unit/test_quality.py`
       **Verify**: `python scripts/verify-agents.py --test-quality-unit`
 
-- [ ] T100 [P] [US5] Write integration tests for hint generation
+- [x] T100 [P] [US5] Write integration tests for hint generation
       **Files**: `backend/review-agent/tests/integration/test_hints.py`
       **Verify**: `python scripts/verify-agents.py --test-hints-integration`
 
-- [ ] T101 [P] [US5] Write end-to-end test for full review flow
+- [x] T101 [P] [US5] Write end-to-end test for full review flow
       **Files**: `backend/review-agent/tests/e2e/test_review_flow.py`
       **Verify**: `python scripts/verify-agents.py --test-review-e2e`
 
-- [ ] T102 [US5] Build Review Agent Docker image
+- [x] T102 [US5] Build Review Agent Docker image
       **Files**: `backend/review-agent/Dockerfile`
       **Verify**: `python scripts/verify-agents.py --build-review`
 
-- [ ] T103 [US5] Deploy Review Agent to Kubernetes
+- [x] T103 [US5] Deploy Review Agent to Kubernetes
       **Files**: `backend/review-agent/k8s/`
       **Verify**: `python scripts/verify-agents.py --deploy-review`
 
-- [ ] T104 [US5] Verify Review Agent health and connectivity
+- [x] T104 [US5] Verify Review Agent health and connectivity
       **Files**: `backend/review-agent/k8s/health-check.yaml`
       **Verify**: `python scripts/verify-agents.py --verify-review-health`
 
 ### 6.3 Triage Service ↔ Review Agent Integration
 
-- [ ] T105 [P] [US5] Test Dapr service invocation: Triage → Review
+- [x] T105 [P] [US5] Test Dapr service invocation: Triage → Review
       **Files**: `tests/integration/triage-to-review-invocation.py`
       **Verify**: `python scripts/verify-agents.py --test-triage-review-invocation`
 
-- [ ] T106 [US5] End-to-end flow test: Triage → Review → Assessment → Response
+- [x] T106 [US5] End-to-end flow test: Triage → Review → Assessment → Response
       **Files**: `tests/e2e/triage-review-flow.py`
       **Verify**: `python scripts/verify-agents.py --test-triage-review-flow`
 
 ### 6.4 Fleet Integration & Verification
 
-- [ ] T107 [P] [US1] [US2] [US3] [US4] [US5] Run complete fleet health check
+- [x] T107 [P] [US1] [US2] [US3] [US4] [US5] Run complete fleet health check
       **Files**: `tests/integration/fleet-health-check.py`
       **Verify**: `python scripts/verify-agents.py --test-fleet-health`
 
-- [ ] T108 [P] [US1] [US2] [US3] [US4] [US5] Test concurrent requests to all agents
+- [x] T108 [P] [US1] [US2] [US3] [US4] [US5] Test concurrent requests to all agents
       **Files**: `tests/integration/concurrent-fleet-test.py`
       **Verify**: `python scripts/verify-agents.py --test-concurrent`
 
-- [ ] T109 [P] [US1] [US2] [US3] [US4] [US5] Test circuit breaker behavior across fleet
+- [x] T109 [P] [US1] [US2] [US3] [US4] [US5] Test circuit breaker behavior across fleet
       **Files**: `tests/integration/circuit-breaker-fleet.py`
       **Verify**: `python scripts/verify-agents.py --test-circuit-breakers`
 
-- [ ] T110 [US1] [US2] [US3] [US4] [US5] End-to-end flow test: Student → Triage → Agent → Response
+- [x] T110 [US1] [US2] [US3] [US4] [US5] End-to-end flow test: Student → Triage → Agent → Response
       **Files**: `tests/e2e/full-fleet-flow.py`
       **Verify**: `python scripts/verify-agents.py --test-full-flow`
 
 ### 6.5 Security & Performance Verification
 
-- [ ] T111 [P] Test JWT validation across all agent routes
+- [x] T111 [P] Test JWT validation across all agent routes
       **Files**: `tests/security/test-jwt-validation.py`
       **Verify**: `python scripts/verify-agents.py --test-jwt-validation`
 
-- [ ] T112 [P] Test rate limiting enforcement (100 req/min per student)
+- [x] T112 [P] Test rate limiting enforcement (100 req/min per student)
       **Files**: `tests/security/test-rate-limiting.py`
       **Verify**: `python scripts/verify-agents.py --test-rate-limiting`
 
-- [ ] T113 [P] Test input sanitization across all agents
+- [x] T113 [P] Test input sanitization across all agents
       **Files**: `tests/security/test-sanitization.py`
       **Verify**: `python scripts/verify-agents.py --test-sanitization`
 
-- [ ] T114 [P] Test Dapr service invocation security (no direct communication)
+- [x] T114 [P] Test Dapr service invocation security (no direct communication)
       **Files**: `tests/security/test-service-invocation.py`
       **Verify**: `python scripts/verify-agents.py --test-service-security`
 
-- [ ] T115 [P] Load test: 100 concurrent users, 1000 requests
+- [x] T115 [P] Load test: 100 concurrent users, 1000 requests
       **Files**: `tests/performance/load-test-100.py`
       **Verify**: `python scripts/verify-agents.py --test-load-100`
 
-- [ ] T116 [P] Load test: 1000 concurrent users
+- [x] T116 [P] Load test: 1000 concurrent users
       **Files**: `tests/performance/load-test-1000.py`
       **Verify**: `python scripts/verify-agents.py --test-load-1000`
 
-- [ ] T117 [P] Token efficiency verification across all MCP scripts
+- [x] T117 [P] Token efficiency verification across all MCP scripts
       **Files**: `tests/performance/token-efficiency-verification.py`
       **Verify**: `python scripts/verify-agents.py --test-token-efficiency`
 
-- [ ] T118 [P] Response time verification (all agents <500ms)
+- [x] T118 [P] Response time verification (all agents <500ms)
       **Files**: `tests/performance/response-time-verification.py`
       **Verify**: `python scripts/verify-agents.py --test-response-times`
 
 ### 6.6 Production Readiness & Documentation
 
-- [ ] T119 [P] Create operational runbooks for all 5 agents
+- [x] T119 [P] Create operational runbooks for all 5 agents
       **Files**: `docs/runbooks/progress-agent.md`, `docs/runbooks/debug-agent.md`, `docs/runbooks/concepts-agent.md`, `docs/runbooks/exercise-agent.md`, `docs/runbooks/review-agent.md`
       **Verify**: `python scripts/verify-agents.py --check-runbooks`
 
-- [ ] T120 [P] Create rollback procedures for fleet deployment
+- [x] T120 [P] Create rollback procedures for fleet deployment
       **Files**: `docs/deployment/rollback-agents.md`
       **Verify**: `python scripts/verify-agents.py --check-rollback`
 
-- [ ] T121 [P] Create monitoring dashboard documentation
+- [x] T121 [P] Create monitoring dashboard documentation
       **Files**: `docs/monitoring/agent-fleet-dashboard.md`
       **Verify**: `python scripts/verify-agents.py --check-monitoring-docs`
 
-- [ ] T122 [P] Create ADRs for significant decisions (Boundaries, Event-Driven, MCP Scripts)
+- [x] T122 [P] Create ADRs for significant decisions (Boundaries, Event-Driven, MCP Scripts)
       **Files**: `docs/architecture/adr-003-agent-boundaries.md`, `docs/architecture/adr-006-event-driven.md`, `docs/architecture/adr-007-mcp-scripts.md`
       **Verify**: `python scripts/verify-agents.py --check-adrs`
 
-- [ ] T123 [P] Update project README with fleet architecture
+- [x] T123 [P] Update project README with fleet architecture
       **Files**: `specs/002-agent-fleet/README.md`
       **Verify**: `python scripts/verify-agents.py --check-readme`
 
-- [ ] T124 [US1] [US2] [US3] [US4] [US5] Run complete fleet verification
+- [x] T124 [US1] [US2] [US3] [US4] [US5] Run complete fleet verification
       **Files**: `scripts/verify-agents.py --complete-fleet`
       **Verify**: `python scripts/verify-agents.py --complete-fleet`
 
-- [ ] T125 [US1] [US2] [US3] [US4] [US5] Generate final status report
+- [x] T125 [US1] [US2] [US3] [US4] [US5] Generate final status report
       **Files**: `reports/milestone-3-complete.md`
       **Verify**: `python scripts/verify-agents.py --generate-report`
 

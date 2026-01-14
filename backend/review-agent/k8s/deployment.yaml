@@ -22,10 +22,10 @@ spec:
       annotations:
         dapr.io/enabled: "true"
         dapr.io/app-id: "review-agent"
-        dapr.io/app-port: "8000"
+        dapr.io/app-port: "8004"
         dapr.io/config: "dapr-config"
         prometheus.io/scrape: "true"
-        prometheus.io/port: "8000"
+        prometheus.io/port: "8004"
         prometheus.io/path: "/metrics"
     spec:
       securityContext:
@@ -37,7 +37,7 @@ spec:
         image: learnflow/review-agent:latest
         imagePullPolicy: IfNotPresent
         ports:
-        - containerPort: 8000
+        - containerPort: 8004
           name: http
           protocol: TCP
         env:
@@ -48,7 +48,7 @@ spec:
         - name: DAPR_GRPC_PORT
           value: "50001"
         - name: APP_PORT
-          value: "8000"
+          value: "8004"
         - name: KAFKA_BROKER
           value: "kafka-cluster:9092"
         - name: STATE_STORE_NAME
@@ -65,7 +65,7 @@ spec:
         livenessProbe:
           httpGet:
             path: /health
-            port: 8000
+            port: 8004
           initialDelaySeconds: 30
           periodSeconds: 10
           timeoutSeconds: 5
@@ -73,7 +73,7 @@ spec:
         readinessProbe:
           httpGet:
             path: /health
-            port: 8000
+            port: 8004
           initialDelaySeconds: 5
           periodSeconds: 5
           timeoutSeconds: 3

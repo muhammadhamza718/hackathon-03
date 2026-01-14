@@ -9,7 +9,8 @@ from typing import Dict, Any, List, Optional
 from datetime import datetime
 import logging
 
-from main import validate_jwt, SecurityContext
+# Import security utilities
+from security import validate_jwt, SecurityContext
 
 # Configure logging
 logger = logging.getLogger(__name__)

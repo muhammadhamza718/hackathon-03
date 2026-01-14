@@ -12,7 +12,8 @@ import sys
 # Add src to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
-from main import app, validate_jwt
+from main import app
+from security import validate_jwt, SecurityContext
 from services.quality_scoring import QualityScoringEngine
 from services.hint_generator import HintGenerator
 
@@ -176,7 +177,7 @@ def disable_rate_limiting():
 def mock_validate_jwt(monkeypatch):
     """Mock JWT validation to always pass"""
     async def mock_validator(credentials=None):
-        from main import SecurityContext
+        from security import SecurityContext
         return SecurityContext(
             student_id="test_student",
             role="student",

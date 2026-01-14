@@ -1,0 +1,29 @@
+{
+  "agents": {
+    "progress": {
+      "endpoint": "http://progress-agent:8000",
+      "dapr_app_id": "progress-agent",
+      "health_check": "/health"
+    },
+    "debug": {
+      "endpoint": "http://debug-agent:8001",
+      "dapr_app_id": "debug-agent",
+      "health_check": "/health"
+    },
+    "concepts": {
+      "endpoint": "http://concepts-agent:8002",
+      "dapr_app_id": "concepts-agent",
+      "health_check": "/health"
+    },
+    "exercise": {
+      "endpoint": "http://exercise-agent:8003",
+      "dapr_app_id": "exercise-agent",
+      "health_check": "/health"
+    },
+    "review": {
+      "endpoint": "http://review-agent:8004",
+      "dapr_app_id": "review-agent",
+      "health_check": "/health"
+    }
+  }
+}

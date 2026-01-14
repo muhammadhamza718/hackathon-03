@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: progress-agent
+  labels:
+    app: progress-agent
+    tier: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: progress-agent
+  template:
+    metadata:
+      labels:
+        app: progress-agent
+        tier: backend
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/app-id: "progress-agent"
+        dapr.io/app-port: "8000"
+        dapr.io/protocol: "http"
+    spec:
+      containers:
+      - name: progress-agent
+        image: progress-agent:latest
+        ports:
+        - containerPort: 8000
+        env:
+        - name: PORT
+          value: "8000"
+        - name: DAPR_ENABLED
+          value: "true"
+        - name: KAFKA_ENABLED
+          value: "true"
+        - name: KAFKA_BROKER
+          value: "learnflow-kafka:9092"
+        - name: KAFKA_TOPIC
+          value: "learning.events"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 5

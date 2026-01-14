@@ -1,0 +1,92 @@
+# Prometheus Service Monitors for Agent Fleet
+# Elite Implementation Standard v2.0.0
+
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: progress-agent-monitor
+  namespace: learnflow
+  labels:
+    app: progress-agent
+    tier: backend
+spec:
+  selector:
+    matchLabels:
+      app: progress-agent
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 15s
+    scrapeTimeout: 10s
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: debug-agent-monitor
+  namespace: learnflow
+  labels:
+    app: debug-agent
+    tier: backend
+spec:
+  selector:
+    matchLabels:
+      app: debug-agent
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 15s
+    scrapeTimeout: 10s
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: concepts-agent-monitor
+  namespace: learnflow
+  labels:
+    app: concepts-agent
+    tier: backend
+spec:
+  selector:
+    matchLabels:
+      app: concepts-agent
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 15s
+    scrapeTimeout: 10s
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: exercise-agent-monitor
+  namespace: learnflow
+  labels:
+    app: exercise-agent
+    tier: backend
+spec:
+  selector:
+    matchLabels:
+      app: exercise-agent
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 15s
+    scrapeTimeout: 10s
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: review-agent-monitor
+  namespace: learnflow
+  labels:
+    app: review-agent
+    tier: backend
+spec:
+  selector:
+    matchLabels:
+      app: review-agent
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 15s
+    scrapeTimeout: 10s

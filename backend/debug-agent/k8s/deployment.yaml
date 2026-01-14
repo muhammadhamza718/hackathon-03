@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: debug-agent
+  labels:
+    app: debug-agent
+    tier: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: debug-agent
+  template:
+    metadata:
+      labels:
+        app: debug-agent
+        tier: backend
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/app-id: "debug-agent"
+        dapr.io/app-port: "8001"
+        dapr.io/protocol: "http"
+    spec:
+      containers:
+      - name: debug-agent
+        image: debug-agent:latest
+        ports:
+        - containerPort: 8001
+        env:
+        - name: PORT
+          value: "8001"
+        - name: DAPR_ENABLED
+          value: "true"
+        - name: KAFKA_ENABLED
+          value: "true"
+        - name: KAFKA_BROKER
+          value: "learnflow-kafka:9092"
+        - name: KAFKA_TOPIC
+          value: "learning.events"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8001
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8001
+          initialDelaySeconds: 5
+          periodSeconds: 5

@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: progress-agent-config
+data:
+  PORT: "8000"
+  DAPR_ENABLED: "true"
+  KAFKA_ENABLED: "true"
+  LOG_LEVEL: "INFO"

@@ -1,0 +1,246 @@
+openapi: 3.1.0
+info:
+  title: Exercise Agent API
+  version: 1.0.0
+  description: |
+    Practice problem generation agent. Creates adaptive exercises with
+    difficulty scaling, hints, and solutions for skill development.
+
+    **Token Efficiency**: 88% vs LLM-based problem generation
+
+    **Key Operations**:
+    - Generate practice problems by topic
+    - Scale difficulty dynamically
+    - Provide progressive hints
+    - Supply verified solutions
+
+  contact:
+    name: Agent Fleet Team
+    email: agents@learnflow.com
+
+servers:
+  - url: http://exercise-agent:8000
+    description: Internal service access
+  - url: https://api.learnflow.com/exercise
+    description: Production via Kong Gateway
+
+paths:
+  /health:
+    get:
+      summary: Health check endpoint
+      description: Returns service health and Dapr connectivity status
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "healthy"
+                  service:
+                    type: string
+                    example: "exercise-agent"
+                  dapr:
+                    type: boolean
+                    example: true
+
+  /metrics:
+    get:
+      summary: Prometheus metrics
+      description: Returns metrics in Prometheus format for monitoring
+      responses:
+        '200':
+          description: Metrics data
+          content:
+            text/plain:
+              schema:
+                type: string
+
+  /exercise/generate:
+    post:
+      summary: Generate exercise
+      description: Create practice problem with adaptive difficulty
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                topic:
+                  type: string
+                  description: Learning topic/concept
+                difficulty:
+                  type: string
+                  description: Problem difficulty
+                  enum: ["beginner", "medium", "hard"]
+                  default: "medium"
+                problem_type:
+                  type: string
+                  description: Type of exercise
+                  enum: ["practice", "challenge", "project"]
+                  default: "practice"
+                student_id:
+                  type: string
+                  description: Student identifier for tracking
+              required:
+                - topic
+                - student_id
+      responses:
+        '200':
+          description: Generated exercise
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  problem:
+                    type: string
+                  solution:
+                    type: string
+                  hints:
+                    type: array
+                    items:
+                      type: string
+                  estimated_time:
+                    type: integer
+                    description: Estimated minutes to complete
+                  difficulty_rating:
+                    type: number
+                    format: float
+                    description: 0.0 to 1.0
+
+  /exercise/verify:
+    post:
+      summary: Verify solution
+      description: Check student solution against expected solution
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                problem_id:
+                  type: string
+                student_solution:
+                  type: string
+                expected_solution:
+                  type: string
+                student_id:
+                  type: string
+              required:
+                - problem_id
+                - student_solution
+                - expected_solution
+                - student_id
+      responses:
+        '200':
+          description: Verification result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  correct:
+                    type: boolean
+                  feedback:
+                    type: string
+                  hints:
+                    type: array
+                    items:
+                      type: string
+                  similarity_score:
+                    type: number
+                    format: float
+                    description: 0.0 to 1.0
+
+  /exercise/hints:
+    post:
+      summary: Get progressive hints
+      description: Retrieve hints for a problem, escalating in helpfulness
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                problem_id:
+                  type: string
+                hint_level:
+                  type: integer
+                  description: Hint level (1-3)
+                  minimum: 1
+                  maximum: 3
+                student_id:
+                  type: string
+              required:
+                - problem_id
+                - student_id
+      responses:
+        '200':
+          description: Progressive hints
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  hints:
+                    type: array
+                    items:
+                      type: string
+                  next_level_available:
+                    type: boolean
+                  explanation:
+                    type: string
+
+  /exercise/difficulty:
+    post:
+      summary: Adjust difficulty
+      description: Recalculate exercise difficulty based on student performance
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                current_difficulty:
+                  type: string
+                  enum: ["beginner", "medium", "hard"]
+                performance:
+                  type: number
+                  format: float
+                  description: 0.0 (failed) to 1.0 (perfect)
+                  minimum: 0.0
+                  maximum: 1.0
+                topic:
+                  type: string
+                student_id:
+                  type: string
+              required:
+                - current_difficulty
+                - performance
+                - topic
+                - student_id
+      responses:
+        '200':
+          description: Recommended difficulty
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  recommended:
+                    type: string
+                    enum: ["beginner", "medium", "hard", "expert"]
+                  reasoning:
+                    type: string
+                  confidence:
+                    type: number
+                    format: float
+                    description: 0.0 to 1.0

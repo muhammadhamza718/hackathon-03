@@ -1,0 +1,63 @@
+{
+  "type": "record",
+  "name": "AgentResponse",
+  "namespace": "learnflow.agents",
+  "version": "1.0",
+  "doc": "Standardized response schema for all agent responses to maintain consistency across the fleet",
+  "fields": [
+    {
+      "name": "response_id",
+      "type": "string",
+      "doc": "Unique response identifier for tracking and correlation"
+    },
+    {
+      "name": "agent_type",
+      "type": "string",
+      "doc": "Agent type: progress|debug|concepts|exercise|review"
+    },
+    {
+      "name": "student_id",
+      "type": "string",
+      "doc": "Student identifier for response routing"
+    },
+    {
+      "name": "timestamp",
+      "type": "long",
+      "logicalType": "timestamp-millis",
+      "doc": "Response generation timestamp"
+    },
+    {
+      "name": "content",
+      "type": "string",
+      "doc": "Main response content/text for the student"
+    },
+    {
+      "name": "metadata",
+      "type": {
+        "type": "map",
+        "values": "string"
+      },
+      "doc": "Additional structured data for frontend processing"
+    },
+    {
+      "name": "token_efficiency",
+      "type": "float",
+      "doc": "Token efficiency percentage achieved (0.0-1.0)"
+    },
+    {
+      "name": "processing_time_ms",
+      "type": "float",
+      "doc": "Total processing time in milliseconds"
+    },
+    {
+      "name": "status",
+      "type": {
+        "type": "enum",
+        "name": "ResponseStatus",
+        "symbols": ["SUCCESS", "PARTIAL", "ERROR"]
+      },
+      "default": "SUCCESS",
+      "doc": "Response status for error handling"
+    }
+  ]
+}

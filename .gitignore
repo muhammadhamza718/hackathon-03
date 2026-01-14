@@ -259,3 +259,19 @@ backend/*/data/
 backend/*/storage/
 skills-library/*/cache/
 skills-library/*/data/
+
+# Agent Fleet specific
+backend/progress-agent/
+backend/debug-agent/
+backend/concepts-agent/
+backend/exercise-agent/
+backend/review-agent/
+skills-library/agents/
+infrastructure/kafka/topics.yaml
+infrastructure/dapr/components/
+infrastructure/kong/routes.yaml
+infrastructure/monitoring/service-monitors.yaml
+scripts/verify-agents.py
+
+# Temporary implementation files
+tmpclaude-*

@@ -1,0 +1,280 @@
+openapi: 3.1.0
+info:
+  title: Progress Agent API
+  version: 1.0.0
+  description: |
+    Master tracking agent with stateful storage. Responsible for calculating and maintaining
+    student mastery scores using the 40/30/20/10 formula.
+
+    **Token Efficiency**: 92% vs LLM-based calculation
+
+    **Key Operations**:
+    - Update mastery scores from events
+    - Retrieve current student progress
+    - Access historical trends
+
+  contact:
+    name: Agent Fleet Team
+    email: agents@learnflow.com
+
+servers:
+  - url: http://progress-agent:8000
+    description: Internal service access
+  - url: https://api.learnflow.com/progress
+    description: Production via Kong Gateway
+
+paths:
+  /health:
+    get:
+      summary: Health check endpoint
+      description: Returns service health and Dapr connectivity status
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "healthy"
+                  service:
+                    type: string
+                    example: "progress-agent"
+                  dapr:
+                    type: boolean
+                    example: true
+                  kafka:
+                    type: boolean
+                    example: true
+
+  /metrics:
+    get:
+      summary: Prometheus metrics
+      description: Returns metrics in Prometheus format for monitoring
+      responses:
+        '200':
+          description: Metrics data
+          content:
+            text/plain:
+              schema:
+                type: string
+
+  /progress/{student_id}:
+    get:
+      summary: Get current mastery state
+      description: Retrieves the current mastery scores and overall progress for a student
+      parameters:
+        - name: student_id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "student-12345"
+      responses:
+        '200':
+          description: Current mastery state
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  student_id:
+                    type: string
+                  latest_scores:
+                    type: object
+                    additionalProperties:
+                      type: object
+                      properties:
+                        completion:
+                          type: number
+                          format: float
+                        quiz:
+                          type: number
+                          format: float
+                        quality:
+                          type: number
+                          format: float
+                        consistency:
+                          type: number
+                          format: float
+                  overall_mastery:
+                    type: number
+                    format: float
+                    example: 0.835
+                  last_updated:
+                    type: string
+                    format: date-time
+                  components_tracked:
+                    type: array
+                    items:
+                      type: string
+              example:
+                student_id: "student-12345"
+                latest_scores:
+                  loops:
+                    completion: 0.85
+                    quiz: 0.90
+                    quality: 0.75
+                    consistency: 0.80
+                  functions:
+                    completion: 0.70
+                    quiz: 0.65
+                    quality: 0.80
+                    consistency: 0.75
+                overall_mastery: 0.778
+                last_updated: "2026-01-13T10:30:00Z"
+                components_tracked: ["loops", "functions"]
+        '404':
+          description: Student not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Student not found"
+
+    post:
+      summary: Update mastery scores
+      description: Process a new StudentProgress event and update mastery state
+      parameters:
+        - name: student_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                component:
+                  type: string
+                  example: "loops"
+                scores:
+                  type: object
+                  properties:
+                    completion:
+                      type: number
+                      format: float
+                      minimum: 0
+                      maximum: 1
+                    quiz:
+                      type: number
+                      format: float
+                      minimum: 0
+                      maximum: 1
+                    quality:
+                      type: number
+                      format: float
+                      minimum: 0
+                      maximum: 1
+                    consistency:
+                      type: number
+                      format: float
+                      minimum: 0
+                      maximum: 1
+              required: ["component", "scores"]
+              example:
+                component: "loops"
+                scores:
+                  completion: 0.85
+                  quiz: 0.90
+                  quality: 0.75
+                  consistency: 0.80
+      responses:
+        '200':
+          description: Mastery updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  student_id:
+                    type: string
+                  component:
+                    type: string
+                  mastery:
+                    type: number
+                    format: float
+                  message:
+                    type: string
+              example:
+                student_id: "student-12345"
+                component: "loops"
+                mastery: 0.835
+                message: "Mastery updated successfully"
+        '400':
+          description: Invalid scores
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  details:
+                    type: array
+                    items:
+                      type: string
+
+  /progress/{student_id}/history:
+    get:
+      summary: Get historical trends
+      description: Retrieves historical mastery scores for trend analysis
+      parameters:
+        - name: student_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: component
+          in: query
+          schema:
+            type: string
+          description: Specific component to filter
+        - name: days
+          in: query
+          schema:
+            type: integer
+            default: 7
+          description: Number of days back
+      responses:
+        '200':
+          description: Historical data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  student_id:
+                    type: string
+                  history:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        date:
+                          type: string
+                        component:
+                          type: string
+                        mastery:
+                          type: number
+                        scores:
+                          type: object
+
+components:
+  securitySchemes:
+    JWTAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token from Kong Gateway
+
+security:
+  - JWTAuth: []

@@ -1,0 +1,276 @@
+openapi: 3.1.0
+info:
+  title: Review Agent API
+  version: 1.0.0
+  description: |
+    Code quality review and feedback agent. Analyzes code quality, provides
+    constructive feedback, and offers strategic hints for improvement.
+
+    **Token Efficiency**: 93% vs LLM-based code review
+
+    **Key Operations**:
+    - Quality scoring and assessment
+    - Constructive feedback generation
+    - Strategic hint provision
+    - Best practice recommendations
+
+  contact:
+    name: Agent Fleet Team
+    email: agents@learnflow.com
+
+servers:
+  - url: http://review-agent:8000
+    description: Internal service access
+  - url: https://api.learnflow.com/review
+    description: Production via Kong Gateway
+
+paths:
+  /health:
+    get:
+      summary: Health check endpoint
+      description: Returns service health and Dapr connectivity status
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "healthy"
+                  service:
+                    type: string
+                    example: "review-agent"
+                  dapr:
+                    type: boolean
+                    example: true
+
+  /metrics:
+    get:
+      summary: Prometheus metrics
+      description: Returns metrics in Prometheus format for monitoring
+      responses:
+        '200':
+          description: Metrics data
+          content:
+            text/plain:
+              schema:
+                type: string
+
+  /review/quality:
+    post:
+      summary: Review code quality
+      description: Analyze code and provide quality score with detailed feedback
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code:
+                  type: string
+                  description: Code to review
+                language:
+                  type: string
+                  description: Programming language
+                  default: "python"
+                review_type:
+                  type: string
+                  description: Type of review
+                  enum: ["quality", "hints", "feedback"]
+                  default: "quality"
+                student_id:
+                  type: string
+                  description: Student identifier for tracking
+              required:
+                - code
+                - student_id
+      responses:
+        '200':
+          description: Quality review
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  quality_score:
+                    type: number
+                    format: float
+                    description: 0.0 to 1.0
+                    minimum: 0.0
+                    maximum: 1.0
+                  feedback:
+                    type: string
+                  hints:
+                    type: array
+                    items:
+                      type: string
+                  suggestions:
+                    type: array
+                    items:
+                      type: string
+                  best_practices:
+                    type: array
+                    items:
+                      type: string
+
+  /review/feedback:
+    post:
+      summary: Get constructive feedback
+      description: Generate detailed, constructive feedback for improvement
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code:
+                  type: string
+                previous_attempts:
+                  type: integer
+                  description: Number of previous attempts
+                  default: 0
+                focus_areas:
+                  type: array
+                  description: Specific areas to focus on
+                  items:
+                    type: string
+                student_id:
+                  type: string
+              required:
+                - code
+                - student_id
+      responses:
+        '200':
+          description: Constructive feedback
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  strengths:
+                    type: array
+                    items:
+                      type: string
+                  areas_for_improvement:
+                    type: array
+                    items:
+                      type: string
+                  actionable_steps:
+                    type: array
+                    items:
+                      type: string
+                  learning_objectives:
+                    type: array
+                    items:
+                      type: string
+
+  /review/hints:
+    post:
+      summary: Get strategic hints
+      description: Provide hints that guide without giving away the solution
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code:
+                  type: string
+                difficulty:
+                  type: string
+                  description: Hint difficulty
+                  enum: ["gentle", "moderate", "push"]
+                  default: "gentle"
+                hint_count:
+                  type: integer
+                  description: Number of hints to provide
+                  default: 3
+                  minimum: 1
+                  maximum: 5
+                student_id:
+                  type: string
+              required:
+                - code
+                - student_id
+      responses:
+        '200':
+          description: Strategic hints
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  hints:
+                    type: array
+                    items:
+                      type: string
+                  difficulty_progression:
+                    type: array
+                    description: Difficulty levels for each hint
+                    items:
+                      type: string
+                  reveal_level:
+                    type: number
+                    format: float
+                    description: How much solution is revealed (0.0 to 1.0)
+
+  /review/compare:
+    post:
+      summary: Compare solution approaches
+      description: Compare student solution with alternative approaches
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                student_code:
+                  type: string
+                alternative_code:
+                  type: string
+                student_id:
+                  type: string
+              required:
+                - student_code
+                - alternative_code
+                - student_id
+      responses:
+        '200':
+          description: Comparison analysis
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  similarities:
+                    type: array
+                    items:
+                      type: string
+                  differences:
+                    type: array
+                    items:
+                      type: string
+                  tradeoffs:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        approach:
+                          type: string
+                        pros:
+                          type: array
+                          items:
+                            type: string
+                        cons:
+                          type: array
+                          items:
+                            type: string
+                  recommendation:
+                    type: string

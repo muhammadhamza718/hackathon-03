@@ -1,0 +1,61 @@
+{
+  "type": "record",
+  "name": "ErrorEvent",
+  "namespace": "learnflow.errors",
+  "version": "1.0",
+  "doc": "Dead letter queue schema for failed events requiring manual review",
+  "fields": [
+    {
+      "name": "event_id",
+      "type": "string",
+      "doc": "Original event ID for correlation"
+    },
+    {
+      "name": "original_event_type",
+      "type": "string",
+      "doc": "Type of the original event"
+    },
+    {
+      "name": "error_type",
+      "type": "string",
+      "doc": "Error classification: validation|processing|timeout|schema"
+    },
+    {
+      "name": "error_message",
+      "type": "string",
+      "doc": "Human-readable error description"
+    },
+    {
+      "name": "failed_at",
+      "type": "long",
+      "logicalType": "timestamp-millis",
+      "doc": "When the failure occurred"
+    },
+    {
+      "name": "original_payload",
+      "type": {
+        "type": "map",
+        "values": "string"
+      },
+      "doc": "Complete original event data for debugging"
+    },
+    {
+      "name": "retry_count",
+      "type": "int",
+      "doc": "Number of processing attempts",
+      "default": 0
+    },
+    {
+      "name": "consumer_agent",
+      "type": ["null", "string"],
+      "default": null,
+      "doc": "Agent that failed to process the event"
+    },
+    {
+      "name": "stack_trace",
+      "type": ["null", "string"],
+      "default": null,
+      "doc": "Full stack trace for debugging"
+    }
+  ]
+}

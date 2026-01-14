@@ -1,0 +1,211 @@
+openapi: 3.1.0
+info:
+  title: Concepts Agent API
+  version: 1.0.0
+  description: |
+    Concept explanation and learning path agent. Provides detailed explanations,
+    prerequisite tracking, and related concept mapping for adaptive learning.
+
+    **Token Efficiency**: 91% vs LLM-based explanation generation
+
+    **Key Operations**:
+    - Explain concepts with variable depth
+    - Identify prerequisites and knowledge gaps
+    - Map related concepts for learning paths
+    - Adjust difficulty dynamically
+
+  contact:
+    name: Agent Fleet Team
+    email: agents@learnflow.com
+
+servers:
+  - url: http://concepts-agent:8000
+    description: Internal service access
+  - url: https://api.learnflow.com/concepts
+    description: Production via Kong Gateway
+
+paths:
+  /health:
+    get:
+      summary: Health check endpoint
+      description: Returns service health and Dapr connectivity status
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "healthy"
+                  service:
+                    type: string
+                    example: "concepts-agent"
+                  dapr:
+                    type: boolean
+                    example: true
+
+  /metrics:
+    get:
+      summary: Prometheus metrics
+      description: Returns metrics in Prometheus format for monitoring
+      responses:
+        '200':
+          description: Metrics data
+          content:
+            text/plain:
+              schema:
+                type: string
+
+  /concepts/explain:
+    post:
+      summary: Explain a concept
+      description: Generate detailed explanation with variable depth and prerequisites
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                concept_name:
+                  type: string
+                  description: Name of the concept to explain
+                depth:
+                  type: string
+                  description: Explanation depth level
+                  enum: ["beginner", "standard", "deep"]
+                  default: "standard"
+                prerequisites:
+                  type: boolean
+                  description: Include prerequisite concepts
+                  default: false
+                student_id:
+                  type: string
+                  description: Student identifier for adaptive content
+              required:
+                - concept_name
+                - student_id
+      responses:
+        '200':
+          description: Concept explanation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  explanation:
+                    type: string
+                  prerequisites:
+                    type: array
+                    items:
+                      type: string
+                  related_concepts:
+                    type: array
+                    items:
+                      type: string
+                  difficulty_level:
+                    type: string
+                    enum: ["beginner", "intermediate", "advanced"]
+
+  /concepts/path:
+    post:
+      summary: Generate learning path
+      description: Create adaptive learning path based on target concept and current knowledge
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                target_concept:
+                  type: string
+                  description: Target learning goal
+                current_knowledge:
+                  type: array
+                  description: Known concepts
+                  items:
+                    type: string
+                depth:
+                  type: string
+                  description: Path depth
+                  enum: ["brief", "standard", "comprehensive"]
+                  default: "standard"
+                student_id:
+                  type: string
+                  description: Student identifier
+              required:
+                - target_concept
+                - student_id
+      responses:
+        '200':
+          description: Learning path
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  path:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        concept:
+                          type: string
+                        type:
+                          type: string
+                          enum: ["prerequisite", "core", "advanced"]
+                        estimated_time:
+                          type: integer
+                          description: Estimated minutes
+                  missing_prerequisites:
+                    type: array
+                    items:
+                      type: string
+                  learning_strategy:
+                    type: string
+
+  /concepts/validate:
+    post:
+      summary: Validate knowledge level
+      description: Check if student has necessary prerequisites for a concept
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                concept_name:
+                  type: string
+                known_concepts:
+                  type: array
+                  items:
+                    type: string
+                student_id:
+                  type: string
+              required:
+                - concept_name
+                - known_concepts
+                - student_id
+      responses:
+        '200':
+          description: Validation result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ready:
+                    type: boolean
+                  missing_prerequisites:
+                    type: array
+                    items:
+                      type: string
+                  recommended_order:
+                    type: array
+                    items:
+                      type: string

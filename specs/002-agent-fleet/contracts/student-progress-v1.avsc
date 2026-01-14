@@ -1,0 +1,91 @@
+{
+  "type": "record",
+  "name": "StudentProgress",
+  "namespace": "learnflow.events",
+  "version": "1.0",
+  "doc": "Core event schema for all student learning progress updates across the agent fleet",
+  "fields": [
+    {
+      "name": "event_id",
+      "type": "string",
+      "doc": "Unique UUID for event identification and deduplication"
+    },
+    {
+      "name": "event_type",
+      "type": "string",
+      "doc": "Event classification for routing and processing",
+      "default": "student.progress.update"
+    },
+    {
+      "name": "timestamp",
+      "type": "long",
+      "logicalType": "timestamp-millis",
+      "doc": "Unix timestamp in milliseconds when event was generated"
+    },
+    {
+      "name": "version",
+      "type": "string",
+      "doc": "Schema version for backward compatibility",
+      "default": "1.0"
+    },
+    {
+      "name": "student_id",
+      "type": "string",
+      "doc": "Student identifier (pseudonymized for privacy)"
+    },
+    {
+      "name": "component",
+      "type": "string",
+      "doc": "Learning component/topic being tracked"
+    },
+    {
+      "name": "scores",
+      "type": {
+        "type": "record",
+        "name": "ComponentScores",
+        "doc": "Individual component performance scores",
+        "fields": [
+          {
+            "name": "completion",
+            "type": "float",
+            "doc": "Task completion rate (0.0-1.0)"
+          },
+          {
+            "name": "quiz",
+            "type": "float",
+            "doc": "Quiz performance score (0.0-1.0)"
+          },
+          {
+            "name": "quality",
+            "type": "float",
+            "doc": "Code/assignment quality score (0.0-1.0)"
+          },
+          {
+            "name": "consistency",
+            "type": "float",
+            "doc": "Practice consistency score (0.0-1.0)"
+          }
+        ]
+      }
+    },
+    {
+      "name": "mastery",
+      "type": "float",
+      "doc": "Calculated mastery using 40/30/20/10 formula"
+    },
+    {
+      "name": "idempotency_key",
+      "type": "string",
+      "doc": "Unique key for deduplication across processing"
+    },
+    {
+      "name": "metadata",
+      "type": ["null", {
+        "type": "map",
+        "values": "string"
+      }],
+      "default": null,
+      "doc": "Optional metadata for future extensions"
+    }
+  ]
+}

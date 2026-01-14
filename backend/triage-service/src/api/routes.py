@@ -1,31 +1,23 @@
 """
 Triage Service API Routes
 Elite Implementation Standard v2.0.0
-
-Modular API routes for triage service with health, metrics, and main triage endpoint.
 """
 
-from fastapi import APIRouter, Depends, Request, HTTPException, status
+from fastapi import APIRouter, Request, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
-from datetime import datetime
 import time
+from datetime import datetime
 
 # Import models and services
 from models.schemas import TriageRequest, TriageResponse, ErrorResponse, SchemaValidator
 from models.errors import TriageError, ValidationError
 from services.integration import TriageOrchestrator, create_triage_orchestrator
 
-# Create main router
 router = APIRouter()
 
-# Health and Metrics Endpoints (Task 1.10)
 @router.get("/health", status_code=status.HTTP_200_OK)
 async def health_check():
-    """
-    Health check endpoint for Kubernetes readiness/liveness probes
-
-    Returns detailed service health status including resilience configuration.
-    """
+    """Health check endpoint for Kubernetes readiness/liveness probes"""
     return {
         "status": "healthy",
         "service": "triage-service",
@@ -40,21 +32,10 @@ async def health_check():
         }
     }
 
-
 @router.get("/metrics", status_code=status.HTTP_200_OK)
-async def get_metrics(orchestrator: TriageOrchestrator = Depends(create_triage_orchestrator)):
-    """
-    Get performance metrics and efficiency statistics
-
-    Returns comprehensive metrics including:
-    - Token efficiency statistics
-    - Performance benchmarks
-    - Resilience configuration
-    - Feature availability
-    """
-    if not orchestrator:
-        return {"error": "Service starting up..."}
-
+async def get_metrics():
+    """Get performance metrics and efficiency statistics"""
+    # Note: In a real implementation, this would aggregate from Prometheus/StatsD
     return {
         "service": "triage-service",
         "version": "1.0.0",
@@ -71,19 +52,11 @@ async def get_metrics(orchestrator: TriageOrchestrator = Depends(create_triage_o
             "circuit_breaker": "5 failures → 30s open",
             "retry": "3 attempts exponential",
             "timeout": "2s"
-        },
-        "features": [
-            "triage-logic skill library",
-            "dapr service invocation",
-            "kong jwt authentication",
-            "schema enforcement",
-            "circuit breaker pattern"
-        ]
+        }
     }
 
-
 @router.post(
-    "/api/v1/triage",
+    "/triage",
     response_model=TriageResponse,
     status_code=status.HTTP_200_OK,
     responses={
@@ -101,24 +74,7 @@ async def triage_request(
     orchestrator: TriageOrchestrator = Depends(create_triage_orchestrator)
 ):
     """
-    Main triage endpoint - intelligent routing with resilience (Task 1.6)
-
-    **Security**: Requires Kong JWT with student_id in sub claim
-
-    **Flow**:
-    1. Validate request against M1 schema contracts
-    2. Extract security context from Kong JWT
-    3. Classify intent using triage-logic skill (98.7% efficient)
-    4. Apply routing decision with circuit breaker
-    5. Invoke target agent via Dapr service invocation
-    6. Return routing decision and audit trail
-
-    **Resilience**:
-    - Circuit breaker: 5 failures → 30s open
-    - Retry policy: 3 attempts, exponential backoff
-    - Timeout: 2s per service call
-
-    **Efficiency**: 19 tokens vs 1500 LLM baseline (98.7% reduction)
+    Main triage endpoint - intelligent routing with resilience
     """
     start_time = time.time()
 
@@ -137,7 +93,7 @@ async def triage_request(
         except Exception as e:
             raise ValidationError(f"Schema validation failed: {str(e)}")
 
-        # Execute triage pipeline (Task 2.6 - connects routing to Dapr)
+        # Execute triage pipeline
         response, metrics = await orchestrator.execute_triage(
             validated_request,
             security_context
@@ -160,7 +116,6 @@ async def triage_request(
         )
 
     except TriageError as e:
-        # Our custom errors
         raise HTTPException(
             status_code=e.status_code,
             detail={
@@ -169,9 +124,7 @@ async def triage_request(
                 "details": e.details
             }
         )
-
     except Exception as e:
-        # Unexpected errors
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail={
@@ -180,46 +133,15 @@ async def triage_request(
             }
         )
 
-
-@router.get("/api/v1/triage/circuit-breakers")
+@router.get("/circuit-breakers")
 async def get_circuit_breaker_status(orchestrator: TriageOrchestrator = Depends(create_triage_orchestrator)):
-    """
-    Get current circuit breaker status for all target agents
-
-    Useful for monitoring and debugging resilience features.
-    """
-    if not orchestrator:
-        return {"status": "initializing"}
-
+    """Get current circuit breaker status for all target agents"""
     status = orchestrator.dapr_client.get_all_circuit_breaker_status()
     return {
         "circuit_breakers": status,
         "summary": {
             "total_agents": len(status),
             "open": sum(1 for s in status.values() if s['state'] == 'OPEN'),
-            "closed": sum(1 for s in status.values() if s['state'] == 'CLOSED'),
-            "half_open": sum(1 for s in status.values() if s['state'] == 'HALF_OPEN')
+            "closed": sum(1 for s in status.values() if s['state'] == 'CLOSED')
         }
-    }
-
-
-@router.get("/api/v1/triage/health/{target_agent}")
-async def check_agent_health(
-    target_agent: str,
-    orchestrator: TriageOrchestrator = Depends(create_triage_orchestrator)
-):
-    """
-    Check health of specific target agent via Dapr
-
-    Args:
-        target_agent: Name of the agent (debug-agent, concepts-agent, etc.)
-    """
-    if not orchestrator:
-        return {"status": "initializing"}
-
-    status = orchestrator.dapr_client.get_circuit_breaker_status(target_agent)
-    return {
-        "target_agent": target_agent,
-        "health": "healthy" if status['can_attempt'] else "degraded",
-        "circuit_breaker": status
     }

@@ -249,4 +249,13 @@ backend/*/storage/
 skills-library/*/cache/
 skills-library/*/data/
 
+# Agent Fleet specific (not needed in agent containers)
+backend/triage-service/
+infrastructure/
+specs/
+history/
+reports/
+tmpclaude-*
+MILESTONE_*
+
 # Ignore everything except what's needed for builds

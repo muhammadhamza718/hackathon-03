@@ -1,0 +1,170 @@
+openapi: 3.1.0
+info:
+  title: Debug Agent API
+  version: 1.0.0
+  description: |
+    Code analysis and debugging agent with AST parsing. Responsible for identifying
+    syntax errors, error patterns, and providing actionable fix suggestions.
+
+    **Token Efficiency**: 94% vs LLM-based analysis
+
+    **Key Operations**:
+    - Analyze code for syntax errors
+    - Detect common error patterns
+    - Generate fix suggestions
+
+  contact:
+    name: Agent Fleet Team
+    email: agents@learnflow.com
+
+servers:
+  - url: http://debug-agent:8000
+    description: Internal service access
+  - url: https://api.learnflow.com/debug
+    description: Production via Kong Gateway
+
+paths:
+  /health:
+    get:
+      summary: Health check endpoint
+      description: Returns service health and Dapr connectivity status
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "healthy"
+                  service:
+                    type: string
+                    example: "debug-agent"
+                  dapr:
+                    type: boolean
+                    example: true
+
+  /metrics:
+    get:
+      summary: Prometheus metrics
+      description: Returns metrics in Prometheus format for monitoring
+      responses:
+        '200':
+          description: Metrics data
+          content:
+            text/plain:
+              schema:
+                type: string
+
+  /debug/analyze:
+    post:
+      summary: Analyze code for errors
+      description: Parse and analyze code to detect syntax and runtime errors
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code:
+                  type: string
+                  description: Code to analyze
+                language:
+                  type: string
+                  description: Programming language
+                  default: "python"
+                student_id:
+                  type: string
+                  description: Student identifier for logging
+              required:
+                - code
+                - student_id
+      responses:
+        '200':
+          description: Analysis results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  valid:
+                    type: boolean
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                  suggestions:
+                    type: array
+                    items:
+                      type: string
+                  complexity:
+                    type: object
+                    additionalProperties:
+                      type: number
+
+  /debug/suggestions:
+    post:
+      summary: Get fix suggestions
+      description: Generate specific fix suggestions for identified errors
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                errors:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                      line:
+                        type: integer
+                      message:
+                        type: string
+                student_id:
+                  type: string
+              required:
+                - errors
+                - student_id
+      responses:
+        '200':
+          description: Fix suggestions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  suggestions:
+                    type: array
+                    items:
+                      type: string
+                  patterns:
+                    type: array
+                    items:
+                      type: object
+
+  /debug/patterns:
+    get:
+      summary: Get common error patterns
+      description: Retrieve common error patterns for reference
+      parameters:
+        - name: student_id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Pattern library
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: string

@@ -21,6 +21,7 @@ from api.middleware.rate_limiter import RateLimitingMiddleware
 from api.middleware.sanitization import SanitizationMiddleware
 from api.routes import router as triage_router
 from services.integration import create_triage_orchestrator
+from config.feature_flags import get_feature_manager, is_feature_enabled
 
 # Global orchestrator instance (created on startup)
 orchestrator = None
@@ -36,6 +37,13 @@ async def lifespan(app: FastAPI):
     print("✅ Phase 1: FastAPI service ready")
     print("✅ Phase 2: Dapr client configured")
     print("✅ Phase 3: Security middleware ready")
+
+    # Load and display feature flags
+    feature_manager = get_feature_manager()
+    print("✅ Phase 6: Feature flags loaded")
+    print(f"   Routing: {feature_manager.get_routing_strategy()}")
+    print(f"   Resilience: {bool(feature_manager.get_resilience_config())}")
+    print(f"   Security: {bool(feature_manager.get_security_config())}")
 
     orchestrator = create_triage_orchestrator()
 

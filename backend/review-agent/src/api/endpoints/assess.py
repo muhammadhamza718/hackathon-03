@@ -9,7 +9,10 @@ from typing import Dict, Any, List, Optional
 from datetime import datetime
 import logging
 
-from main import validate_jwt, SecurityContext
+# Import types locally to avoid circular imports
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from main import SecurityContext
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -52,7 +55,7 @@ class AssessmentHealthResponse(BaseModel):
 )
 async def assess_code_quality(
     request: AssessmentRequest,
-    security_context: SecurityContext = Depends(validate_jwt)
+    security_context: "SecurityContext" = Depends(lambda: __import__('main').validate_jwt())
 ):
     """
     Assess code quality with comprehensive analysis

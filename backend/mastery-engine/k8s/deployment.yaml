@@ -1,0 +1,165 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mastery-engine
+  namespace: learnflow
+  labels:
+    app: mastery-engine
+    version: v1
+    component: core-service
+    managed-by: kubectl
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: mastery-engine
+  template:
+    metadata:
+      labels:
+        app: mastery-engine
+        version: v1
+        component: core-service
+      annotations:
+        # Dapr configuration
+        dapr.io/enabled: "true"
+        dapr.io/app-id: "mastery-engine"
+        dapr.io/app-port: "8005"
+        dapr.io/config: "mastery-config"
+        dapr.io/env: "production"
+        dapr.io/enable-mtls: "true"
+        dapr.io/allow-untrusted: "false"
+
+        # Prometheus metrics
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8005"
+        prometheus.io/path: "/metrics"
+
+        # Linkerd tracing
+        linkerd.io/inject: "enabled"
+
+        # Rolling update annotations
+        checksum/config: "{{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}"
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+
+      containers:
+      - name: mastery-engine
+        image: learnflow/mastery-engine:latest
+        imagePullPolicy: Always
+
+        ports:
+        - containerPort: 8005
+          name: http
+          protocol: TCP
+
+        envFrom:
+        - configMapRef:
+            name: mastery-engine-config
+        - secretRef:
+            name: mastery-engine-secrets
+            optional: true
+
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "250m"
+
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8005
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 3
+
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8005
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+
+        startupProbe:
+          httpGet:
+            path: /health
+            port: 8005
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 6
+
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+
+        lifecycle:
+          preStop:
+            exec:
+              command: ["/bin/sh", "-c", "sleep 10"]
+
+      # Temporary volume for application temp files
+      volumes:
+      - name: tmp
+        emptyDir: {}
+
+      # Ensure pods are spread across nodes
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - mastery-engine
+              topologyKey: kubernetes.io/hostname
+
+      # Restart policy
+      restartPolicy: Always
+
+      # Tolerations for dedicated nodes if needed
+      tolerations:
+      - key: "workload"
+        operator: "Equal"
+        value: "backend"
+        effect: "NoSchedule"

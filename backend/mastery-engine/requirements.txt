@@ -1,0 +1,86 @@
+# Core Web Framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.2
+pydantic-settings==2.1.0
+
+# Dapr Integration
+dapr==1.12.0
+dapr-ext-fastapi==1.12.0
+
+# Kafka Integration
+kafka-python==2.0.2
+confluent-kafka==2.3.0
+
+# Redis Client (for direct access if needed)
+redis==5.0.1
+
+# JWT Authentication
+python-jose==3.3.0
+passlib==1.7.4
+bcrypt==4.1.2
+
+# Password Hashing
+argon2-cffi==23.1.0
+
+# Rate Limiting
+slowapi==0.1.9
+
+# Input Validation & Security
+python-multipart==0.0.6
+email-validator==2.1.0.post2
+
+# Structured Logging
+structlog==23.2.0
+colorama==0.4.6
+
+# Metrics & Monitoring
+prometheus-client==0.19.0
+
+# Distributed Tracing
+opentelemetry-api==1.20.0
+opentelemetry-sdk==1.20.0
+opentelemetry-instrumentation-fastapi==0.41b0
+
+# HTTP Client (for service-to-service)
+httpx==0.25.2
+aiohttp==3.9.1
+
+# Async Utilities
+asyncio==3.4.3
+aiofiles==23.2.1
+
+# NumPy for predictive analytics (linear regression)
+numpy==1.26.2
+
+# Schema validation
+jsonschema==4.20.0
+avro==1.11.3
+
+# CORS
+starlette==0.27.0
+
+# Configuration
+python-dotenv==1.0.0
+
+# Testing Dependencies (not included in production image)
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-cov==4.1.0
+pytest-mock==3.12.0
+httpx==0.25.2
+
+# Code Quality (development)
+black==23.11.0
+flake8==6.1.0
+isort==5.12.0
+mypy==1.7.1
+
+# Type stubs
+types-redis==4.6.0.10
+types-requests==2.31.0.10
+types-python-jose==3.3.4.8
+
+# Security scanning (development)
+bandit==1.7.5
+safety==2.3.5

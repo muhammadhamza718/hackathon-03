@@ -1,0 +1,141 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mastery-engine-config
+  namespace: learnflow
+  labels:
+    app: mastery-engine
+    component: configuration
+data:
+  # Application Configuration
+  ENVIRONMENT: "production"
+  LOG_LEVEL: "INFO"
+  PORT: "8005"
+
+  # Dapr Configuration
+  DAPR_HTTP_PORT: "3500"
+  DAPR_GRPC_PORT: "50001"
+  DAPR_STATE_STORE: "statestore"
+  DAPR_PUBSUB: "pubsub"
+  DAPR_TIMEOUT: "30"
+
+  # Kafka Configuration
+  KAFKA_ENABLED: "true"
+  KAFKA_BROKER: "kafka-cluster:9092"
+  KAFKA_TOPIC_REQUESTS: "mastery.requests"
+  KAFKA_TOPIC_RESULTS: "mastery.results"
+  KAFKA_TOPIC_DLQ: "mastery.dlq"
+  KAFKA_CONSUMER_GROUP: "mastery-engine-v1"
+  KAFKA_TIMEOUT: "30"
+
+  # Redis Configuration (via Dapr State Store)
+  REDIS_HOST: "redis-master:6379"
+  REDIS_PORT: "6379"
+  REDIS_DB: "0"
+  REDIS_TIMEOUT: "5"
+
+  # JWT Security Configuration
+  JWT_ALGORITHM: "HS256"
+  JWT_EXPIRE_MINUTES: "1440"
+
+  # Performance Configuration
+  RATE_LIMIT_ENABLED: "true"
+  MAX_CONCURRENT_REQUESTS: "100"
+  CACHE_TTL: "300"
+
+  # Timeout Configuration
+  REQUEST_TIMEOUT: "30"
+  CALCULATION_TIMEOUT: "60"
+  PREDICTION_TIMEOUT: "45"
+
+  # Feature Flags
+  ENABLE_PREDICTIONS: "true"
+  ENABLE_RECOMMENDATIONS: "true"
+  ENABLE_BATCH_PROCESSING: "true"
+  ENABLE_ANALYTICS: "true"
+
+  # Data Retention
+  GDPR_RETENTION_DAYS: "90"
+  EVENT_RETENTION_HOURS: "72"
+
+  # Monitoring
+  METRICS_ENABLED: "true"
+  TRACING_ENABLED: "true"
+  HEALTH_CHECK_INTERVAL: "30"
+
+  # Rate Limiting
+  RATE_LIMIT_QUERY: "50"
+  RATE_LIMIT_CALCULATE: "30"
+  RATE_LIMIT_PREDICTIONS: "20"
+  RATE_LIMIT_BATCH: "5"
+
+  # Kafka Consumer Configuration
+  KAFKA_POLL_TIMEOUT: "1000"
+  KAFKA_COMMIT_INTERVAL: "5000"
+  KAFKA_RETRY_ATTEMPTS: "3"
+  KAFKA_RETRY_DELAY: "1000"
+
+  # Calculation Formula Weights
+  MASTERY_WEIGHT_COMPLETION: "0.40"
+  MASTERY_WEIGHT_QUIZ: "0.30"
+  MASTERY_WEIGHT_QUALITY: "0.20"
+  MASTERY_WEIGHT_CONSISTENCY: "0.10"
+
+  # Thresholds
+  INTERVENTION_THRESHOLD: "0.50"
+  WEAK_AREA_THRESHOLD: "0.70"
+  STRONG_AREA_THRESHOLD: "0.85"
+
+  # Prediction Configuration
+  PREDICTION_WINDOW_DAYS: "7"
+  PREDICTION_CACHE_TTL: "3600"
+  MIN_HISTORY_FOR_PREDICTION: "3"
+
+  # Recommendation Limits
+  MAX_RECOMMENDATIONS: "10"
+  RECOMMENDATION_PRIORITY_HIGH: "0.5"
+  RECOMMENDATION_PRIORITY_MEDIUM: "0.7"
+
+  # Batch Configuration
+  BATCH_SIZE_LIMIT: "1000"
+  BATCH_TIMEOUT: "300"
+  BATCH_WORKERS: "4"
+
+  # Security Headers
+  SECURITY_X_FRAME_OPTIONS: "DENY"
+  SECURITY_X_CONTENT_TYPE_OPTIONS: "nosniff"
+  SECURITY_X_XSS_PROTECTION: "1; mode=block"
+
+  # CORS Configuration
+  CORS_ALLOWED_ORIGINS: "https://learnflow.com,https://app.learnflow.com"
+  CORS_ALLOW_METHODS: "GET,POST,PUT,DELETE,OPTIONS"
+  CORS_ALLOW_HEADERS: "Content-Type,Authorization,X-Request-ID"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mastery-engine-secrets
+  namespace: learnflow
+  labels:
+    app: mastery-engine
+    component: secrets
+type: Opaque
+stringData:
+  # WARNING: Replace with actual secure values in production
+  # Generate with: openssl rand -base64 32
+  JWT_SECRET: "CHANGE_ME_IN_PRODUCTION_generate_secure_random_value"
+
+  # Database credentials (if using direct connection)
+  DB_HOST: "postgres-cluster"
+  DB_PORT: "5432"
+  DB_NAME: "mastery"
+  DB_USER: "mastery_user"
+  DB_PASSWORD: "CHANGE_ME_IN_PRODUCTION"
+
+  # Kafka credentials (if using SASL)
+  KAFKA_USERNAME: "mastery-engine"
+  KAFKA_PASSWORD: "CHANGE_ME_IN_PRODUCTION"
+
+  # Redis password (if authentication enabled)
+  REDIS_PASSWORD: "CHANGE_ME_IN_PRODUCTION"

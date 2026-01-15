@@ -20,6 +20,9 @@ from src.models.mastery import (
     StateKeyPatterns, ComponentScores, MasteryBreakdown, MasteryWeights
 )
 from src.models.events import LearningEvent
+from src.services.circuit_breaker import safe_redis_operation, CircuitBreakerConfig
+from src.main import redis_operations_total, cache_hits, cache_misses
+from src.services.connection_pool import get_redis_pool
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +39,7 @@ class StateManager:
         self.serializer = JSONSerializer()
         self.cache = {}  # L1 cache (memory)
         self.cache_ttl = {}  # Track cache expiration
+        self.redis_pool = get_redis_pool()  # Connection pool for direct Redis access if needed
 
     @classmethod
     def create(cls, store_name: str = "statestore") -> 'StateManager':
@@ -47,12 +51,23 @@ class StateManager:
 
     async def health_check(self) -> bool:
         """
-        Verify state store connectivity
+        Verify state store connectivity and connection pool health
         Returns True if store is accessible
         """
         try:
-            # Try to get a non-existent key - should return None without error
+            # Check Dapr state store
             await self.get("health:check:test")
+
+            # Check connection pool health (if available)
+            try:
+                pool_healthy = await self.redis_pool.health_check()
+                if not pool_healthy:
+                    logger.warning("Redis connection pool health check failed")
+                    return False
+            except Exception:
+                # Connection pool check is optional
+                pass
+
             return True
         except Exception as e:
             logger.error(f"State store health check failed: {e}")
@@ -316,9 +331,9 @@ class StateManager:
 
     async def save(self, key: str, value: Any, ttl_days: int = None, ttl_hours: int = None) -> bool:
         """
-        Core save operation with optional TTL
+        Core save operation with optional TTL and circuit breaker protection
         """
-        try:
+        async def _save_operation():
             # Calculate TTL in seconds
             ttl_seconds = None
             if ttl_days:
@@ -341,7 +356,22 @@ class StateManager:
             else:
                 self.cache_ttl.pop(key, None)
 
+            # Update Prometheus metrics
+            redis_operations_total.labels(operation="set", status="success").inc()
+
             return True
+
+        async def _fallback():
+            """Fallback: Keep data in cache only"""
+            logger.warning(f"Redis save failed, using cache fallback for key: {key}")
+            self.cache[key] = value
+            self.cache_ttl.pop(key, None)  # No TTL in cache-only mode
+            redis_operations_total.labels(operation="set", status="fallback").inc()
+            return True
+
+        try:
+            # Execute with circuit breaker
+            return await safe_redis_operation(_save_operation, _fallback)
 
         except Exception as e:
             logger.error(f"Failed to save state key {key}: {e}")
@@ -349,22 +379,26 @@ class StateManager:
 
     async def get(self, key: str) -> Optional[Any]:
         """
-        Core get operation with L1 cache
+        Core get operation with L1 cache and circuit breaker protection
         """
-        try:
-            # Check L1 cache first
-            if key in self.cache:
-                # Check if cache entry is still valid
-                if key in self.cache_ttl:
-                    if datetime.utcnow() < self.cache_ttl[key]:
-                        return self.cache[key]
-                    else:
-                        # Cache expired
-                        del self.cache[key]
-                        del self.cache_ttl[key]
-                else:
+        # Check L1 cache first (no circuit breaker for cache)
+        if key in self.cache:
+            # Check if cache entry is still valid
+            if key in self.cache_ttl:
+                if datetime.utcnow() < self.cache_ttl[key]:
+                    cache_hits.inc()  # Prometheus metric
                     return self.cache[key]
+                else:
+                    # Cache expired
+                    del self.cache[key]
+                    del self.cache_ttl[key]
+            else:
+                cache_hits.inc()  # Prometheus metric
+                return self.cache[key]
 
+        cache_misses.inc()  # Prometheus metric
+
+        async def _get_operation():
             # Get from Dapr state store
             response = self.dapr.get_state(
                 store_name=self.store_name,
@@ -378,9 +412,23 @@ class StateManager:
                 # Update cache
                 self.cache[key] = value
 
+                # Update Prometheus metrics
+                redis_operations_total.labels(operation="get", status="success").inc()
+
                 return value
             else:
+                redis_operations_total.labels(operation="get", status="not_found").inc()
                 return None
+
+        async def _fallback():
+            """Fallback: Return None (cache miss)"""
+            logger.warning(f"Redis get failed, returning cache miss for key: {key}")
+            redis_operations_total.labels(operation="get", status="fallback").inc()
+            return None
+
+        try:
+            # Execute with circuit breaker
+            return await safe_redis_operation(_get_operation, _fallback)
 
         except Exception as e:
             logger.error(f"Failed to get state key {key}: {e}")

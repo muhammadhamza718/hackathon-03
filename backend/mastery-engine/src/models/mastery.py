@@ -5,9 +5,10 @@ Mastery Models
 Pydantic models for mastery calculation and state management.
 """
 
-from datetime import datetime
-from typing import Dict, List, Optional
+from datetime import datetime, date
+from typing import Dict, List, Optional, Any
 from enum import Enum
+from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -278,3 +279,231 @@ class StateKeyPatterns:
     @staticmethod
     def idempotency_check(event_id: str) -> str:
         return f"processed:{event_id}"
+
+    @staticmethod
+    def batch_job(batch_id: str) -> str:
+        return f"batch:{batch_id}"
+
+    @staticmethod
+    def batch_result(batch_id: str, student_id: str) -> str:
+        return f"batch:{batch_id}:result:{student_id}"
+
+    @staticmethod
+    def analytics_request(request_id: str) -> str:
+        return f"analytics:request:{request_id}"
+
+
+# ==================== PHASE 9: BATCH PROCESSING MODELS ====================
+
+class BatchPriority(str, Enum):
+    """Priority levels for batch processing jobs"""
+    LOW = "low"
+    NORMAL = "normal"
+    HIGH = "high"
+
+
+class BatchStatus(str, Enum):
+    """Status of batch processing job"""
+    PENDING = "pending"
+    PROCESSING = "processing"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+
+
+class BatchMasteryRequest(BaseModel):
+    """Request for batch mastery calculation"""
+    student_ids: List[str] = Field(..., min_items=1, max_items=1000, description="Up to 1000 student IDs")
+    priority: BatchPriority = Field(BatchPriority.NORMAL)
+    callback_url: Optional[str] = Field(None, description="Optional webhook for completion notification")
+
+
+class BatchMasteryItem(BaseModel):
+    """Individual result item for batch processing"""
+    student_id: str
+    success: bool
+    mastery_result: Optional[MasteryResult] = None
+    error_message: Optional[str] = None
+
+
+class BatchMasteryResponse(BaseModel):
+    """Response for batch mastery calculation request"""
+    batch_id: str
+    status: BatchStatus
+    student_count: int
+    processed_count: int = Field(0, description="Number of students processed so far")
+    priority: BatchPriority
+    created_at: datetime
+    completed_at: Optional[datetime] = None
+    results: List[BatchMasteryItem] = Field(default_factory=list)
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+
+
+class BatchJobStatus(BaseModel):
+    """Status query response for batch job"""
+    batch_id: str
+    status: BatchStatus
+    progress_percentage: float = Field(0.0, ge=0.0, le=100.0)
+    total_students: int
+    processed_students: int
+    failed_count: int = Field(0, description="Number of failures")
+    estimated_time_remaining: Optional[int] = Field(None, description="Seconds remaining")
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+
+
+# ==================== PHASE 9: ANALYTICS MODELS ====================
+
+class AggregationType(str, Enum):
+    """Type of data aggregation for historical analytics"""
+    DAILY = "daily"
+    WEEKLY = "weekly"
+    MONTHLY = "monthly"
+
+
+class DateRangeRequest(BaseModel):
+    """Request for date-range based analytics"""
+    student_id: str
+    start_date: date
+    end_date: date
+    aggregation: AggregationType = Field(AggregationType.DAILY)
+
+    @field_validator('end_date')
+    @classmethod
+    def validate_date_range(cls, v, values):
+        if 'start_date' in values.data and v < values.data['start_date']:
+            raise ValueError("end_date must be after start_date")
+        return v
+
+
+class MasteryHistoryData(BaseModel):
+    """Historical mastery data point"""
+    date: date
+    mastery_score: float
+    level: MasteryLevel
+    components: ComponentScores
+    sample_size: int = Field(1, description="Number of events contributing to this snapshot")
+
+
+class MasteryHistoryResponse(BaseModel):
+    """Response for mastery history query"""
+    student_id: str
+    start_date: date
+    end_date: date
+    aggregation: AggregationType
+    data: List[MasteryHistoryData]
+    statistics: Dict[str, Any] = Field(default_factory=dict)
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+
+
+class SummaryStatistics(BaseModel):
+    """Statistical summary for a period"""
+    count: int
+    mean: float
+    median: float
+    std_dev: float
+    min_value: float
+    max_value: float
+    percentiles: Dict[str, float] = Field(default_factory=dict)  # e.g., "25": 0.4, "75": 0.8
+
+
+class MasteryAnalyticsResponse(BaseModel):
+    """Comprehensive analytics response with statistics"""
+    student_id: str
+    period: DateRangeRequest
+    summary: SummaryStatistics
+    trend: str = Field(..., pattern="^(improving|declining|stable|inconsistent)$")
+    volatility: float = Field(..., ge=0.0, le=1.0, description="Standard deviation normalized to 0-1")
+    consistency_score: float = Field(..., ge=0.0, le=1.0, description="How consistent the student is")
+    component_trends: Dict[str, str] = Field(default_factory=dict)  # Component -> trend
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+
+
+class CohortComparisonRequest(BaseModel):
+    """Request for cohort comparison analytics"""
+    cohort_a_student_ids: List[str] = Field(..., min_items=2, description="First cohort of students")
+    cohort_b_student_ids: List[str] = Field(..., min_items=2, description="Second cohort of students")
+    comparison_date: Optional[date] = Field(None, description="Specific date for comparison, or latest")
+    include_component_analysis: bool = Field(True, description="Include component-level comparison")
+    include_percentiles: bool = Field(True, description="Include percentile rankings")
+
+
+class CohortComparisonResult(BaseModel):
+    """Comparison results between two cohorts"""
+    cohort_a_stats: SummaryStatistics
+    cohort_b_stats: SummaryStatistics
+    statistical_significance: Optional[float] = Field(None, ge=0.0, le=1.0, description="p-value if calculable")
+    winner: Optional[str] = Field(None, description="Which cohort performed better")
+    component_comparison: Dict[str, Dict[str, float]] = Field(default_factory=dict)
+    percentile_rankings: Dict[str, float] = Field(default_factory=dict)  # student_id -> percentile
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+
+
+class StudentComparisonRequest(BaseModel):
+    """Request to compare specific students or groups"""
+    student_ids: List[str] = Field(..., min_items=2, max_items=50, description="Students to compare")
+    metric: str = Field("mastery_score", description="Which metric to compare")
+    timeframe_days: int = Field(30, ge=1, le=365, description="Lookback period")
+
+
+class StudentComparisonResult(BaseModel):
+    """Result of student comparison"""
+    rankings: List[Dict[str, Any]]  # List of student rankings
+    comparisons: Dict[str, Dict[str, Any]]  # Detailed comparisons
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+
+
+# ==================== PHASE 10: DAPR INTEGRATION MODELS ====================
+
+class DaprIntent(str, Enum):
+    """Intents for Dapr service invocation"""
+    MASTERY_CALCULATION = "mastery_calculation"
+    GET_PREDICTION = "get_prediction"
+    GENERATE_PATH = "generate_path"
+    BATCH_PROCESS = "batch_process"
+    ANALYTICS_QUERY = "analytics_query"
+
+
+class DaprSecurityContext(BaseModel):
+    """Security context propagated from Dapr"""
+    token: Optional[str] = Field(None, description="JWT token for authentication")
+    user_id: Optional[str] = Field(None, description="User making the request")
+    roles: List[str] = Field(default_factory=list, description="User roles")
+    correlation_id: Optional[str] = Field(None, description="Request correlation ID")
+
+
+class DaprProcessRequest(BaseModel):
+    """Request for Dapr service invocation"""
+    intent: DaprIntent
+    payload: Dict[str, Any] = Field(default_factory=dict, description="Intent-specific payload")
+    security_context: Optional[DaprSecurityContext] = None
+
+
+class DaprProcessResponse(BaseModel):
+    """Standardized response for Dapr service invocation"""
+    success: bool
+    data: Optional[Dict[str, Any]] = None
+    error: Optional[str] = None
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+    correlation_id: Optional[str] = None
+
+
+class DaprErrorDetail(BaseModel):
+    """Detailed error information for Dapr calls"""
+    code: str
+    message: str
+    details: Optional[Dict[str, Any]] = None
+    retryable: bool = False
+
+
+# ==================== UTILITY REQUEST/RESPONSE MODELS ====================
+
+class BatchStatusQuery(BaseModel):
+    """Query for batch job status"""
+    batch_id: str
+
+
+class AnalyticsConfigResponse(BaseModel):
+    """Configuration for analytics services"""
+    model_version: str
+    config: Dict[str, Any]
+    notes: str

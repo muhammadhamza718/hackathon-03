@@ -54,7 +54,7 @@ const SECURITY_HEADERS = {
 /**
  * Main middleware function
  */
-export async function middleware(request: NextRequest) {
+export default async function middleware(request: NextRequest) {
   const response = NextResponse.next();
 
   // Apply CORS headers
@@ -158,10 +158,6 @@ function addCorrelationID(request: NextRequest, response: NextResponse) {
   response.headers.set('X-Correlation-ID', correlationId);
   response.headers.set('X-Request-ID', correlationId);
 
-  // Also add to request headers for downstream services
-  request.headers.set('X-Correlation-ID', correlationId);
-  request.headers.set('X-Request-ID', correlationId);
-
   // Log the request (in production, send to logging service)
   if (process.env.NODE_ENV !== 'production') {
     console.log(`🌐 ${request.method} ${request.nextUrl.pathname} [${correlationId}]`);
@@ -202,23 +198,7 @@ async function checkRateLimit(request: NextRequest): Promise<NextResponse | null
     return null; // Skip rate limiting in development
   }
 
-  // If rate limit exceeded, return 429
-  return NextResponse.json(
-    {
-      error: 'Too Many Requests',
-      message: 'Rate limit exceeded. Please try again later.',
-      retryAfter: 60,
-    },
-    {
-      status: 429,
-      headers: {
-        'Retry-After': '60',
-        'X-RateLimit-Limit': RATE_LIMIT.requests.toString(),
-        'X-RateLimit-Remaining': '0',
-        'X-RateLimit-Reset': new Date(now + RATE_LIMIT.window).toISOString(),
-      },
-    }
-  );
+  return null; // No rate limiting for this implementation
 }
 
 /**
@@ -233,6 +213,9 @@ async function checkAuthentication(request: NextRequest): Promise<NextResponse |
     '/api/auth/login',
     '/api/auth/register',
     '/api/auth/refresh',
+    '/login',
+    '/register',
+    '/',
   ];
 
   if (publicRoutes.some(route => path.startsWith(route))) {
@@ -274,7 +257,7 @@ async function checkAuthentication(request: NextRequest): Promise<NextResponse |
 }
 
 /**
- * Handle preflight OPTIONS requests
+ * Configuration for middleware routing
  */
 export const config = {
   matcher: [
@@ -288,31 +271,3 @@ export const config = {
     '/((?!_next/static|_next/image|favicon.ico|public/).*)',
   ],
 };
-
-/**
- * Health check endpoint for middleware
- * GET /api/health/middleware
- */
-export async function GET(request: NextRequest) {
-  const status = {
-    status: 'healthy',
-    timestamp: new Date().toISOString(),
-    config: {
-      cors: {
-        origins: CORS_CONFIG.origins.length,
-        methods: CORS_CONFIG.methods,
-        credentials: CORS_CONFIG.credentials,
-      },
-      security: Object.keys(SECURITY_HEADERS),
-      rateLimit: process.env.REDIS_URL ? 'redis' : 'memory',
-    },
-    environment: process.env.NODE_ENV,
-  };
-
-  return NextResponse.json(status, {
-    headers: {
-      'Content-Type': 'application/json',
-      'Cache-Control': 'no-store, max-age=0',
-    },
-  });
-}

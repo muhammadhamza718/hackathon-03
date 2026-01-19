@@ -175,7 +175,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUserData(data.user);
 
       setAuthState({
-        user: data.user,
+        user: {
+          ...data.user,
+          role: data.user.role as 'student' | 'instructor' | 'admin',
+        },
         tokens: { accessToken: data.accessToken, expiresIn: Math.floor(Date.now() / 1000) + 3600 },
         isAuthenticated: true,
         isLoading: false,
@@ -294,16 +297,20 @@ export function withAuth<P extends object>(
       );
     }
 
-    if (!isAuthenticated) {
-      // Redirect to login
+    // Check current path to avoid redirect loop
+    const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
+    const isLoginPage = currentPath === '/login' || currentPath === '/register';
+
+    if (!isAuthenticated && !isLoginPage) {
+      // Redirect to login only if not already on login page
       if (typeof window !== 'undefined') {
         window.location.href = '/login';
       }
       return null;
     }
 
-    if (requiredRole && user && !requiredRole.includes(user.role)) {
-      // Redirect to unauthorized page
+    if (isAuthenticated && requiredRole && user && !requiredRole.includes(user.role)) {
+      // Redirect to unauthorized page for role mismatch
       if (typeof window !== 'undefined') {
         window.location.href = '/unauthorized';
       }
@@ -312,4 +319,19 @@ export function withAuth<P extends object>(
 
     return <Component {...props} />;
   };
+}
+
+// Hook to check if we're on a public route (no redirect)
+export function useIsPublicRoute(): boolean {
+  const [isPublic, setIsPublic] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const path = window.location.pathname;
+      const publicRoutes = ['/login', '/register', '/forgot-password', '/reset-password', '/'];
+      setIsPublic(publicRoutes.includes(path));
+    }
+  }, []);
+
+  return isPublic;
 }

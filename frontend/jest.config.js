@@ -29,10 +29,45 @@ const customJestConfig = {
     '/tests/',
     '/scripts/',
   ],
+  // Coverage thresholds to enforce >90% coverage
+  coverageThreshold: {
+    global: {
+      branches: 90,
+      functions: 90,
+      lines: 90,
+      statements: 90,
+    },
+    // Component-level thresholds for critical paths
+    './src/store/auth-context.tsx': {
+      branches: 95,
+      functions: 95,
+      lines: 95,
+      statements: 95,
+    },
+    './src/store/editor-store.ts': {
+      branches: 90,
+      functions: 90,
+      lines: 90,
+      statements: 90,
+    },
+    './src/lib/api-client.ts': {
+      branches: 90,
+      functions: 90,
+      lines: 90,
+      statements: 90,
+    },
+    './src/lib/mcp/client.ts': {
+      branches: 85, // More complex, slightly lower threshold
+      functions: 85,
+      lines: 85,
+      statements: 85,
+    },
+  },
 
   // Test match patterns
   testMatch: [
     '**/tests/unit/**/*.test.{js,jsx,ts,tsx}',
+    '**/tests/infrastructure/**/*.test.{js,jsx,ts,tsx}',
     '**/__tests__/*.{js,jsx,ts,tsx}',
   ],
 
@@ -48,6 +83,8 @@ const customJestConfig = {
     '/coverage/',
     '/tests/integration/',
     '/tests/e2e/',
+    '/tests/performance/',
+    '/tests/security/',
   ],
 
   // Verbose output

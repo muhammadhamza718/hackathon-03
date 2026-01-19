@@ -5,8 +5,12 @@
 
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
+import { editor } from 'monaco-editor';
 
 export interface EditorState {
+  // Monaco Editor instance
+  editorInstance: editor.IStandaloneCodeEditor | null;
+
   // Editor content and configuration
   code: string;
   language: string;
@@ -42,6 +46,7 @@ export interface EditorState {
   historyIndex: number;
 
   // Actions
+  setEditorInstance: (instance: editor.IStandaloneCodeEditor) => void;
   setCode: (code: string) => void;
   setLanguage: (language: string) => void;
   setFileName: (name: string) => void;
@@ -52,6 +57,7 @@ export interface EditorState {
   setTheme: (theme: 'light' | 'dark' | 'high-contrast') => void;
   setDiagnostics: (diagnostics: Array<{ line: number; column: number; message: string; severity: 'error' | 'warning' | 'info' }>) => void;
   clearDiagnostics: () => void;
+  markSaved: () => void;
 
   // History management
   saveToHistory: () => void;
@@ -79,6 +85,7 @@ export const useEditorStore = create<EditorState>()(
     persist(
       (set, get) => ({
         // Initial state
+        editorInstance: null,
         code: '# Write your Python code here...\n\ndef hello_world():\n    print("Hello, World!")\n',
         language: 'python',
         fileName: 'main.py',
@@ -92,6 +99,9 @@ export const useEditorStore = create<EditorState>()(
         diagnostics: [],
         history: [],
         historyIndex: -1,
+
+        // Editor instance management
+        setEditorInstance: (editorInstance) => set({ editorInstance }),
 
         // Code and content setters
         setCode: (code) => {
@@ -109,6 +119,9 @@ export const useEditorStore = create<EditorState>()(
 
         // Editor readiness
         setEditorReady: (isEditorReady) => set({ isEditorReady }),
+
+        // Mark as saved
+        markSaved: () => set({ isCodeDirty: false }),
 
         // Editor settings
         setFontSize: (fontSize) => set({ fontSize }),

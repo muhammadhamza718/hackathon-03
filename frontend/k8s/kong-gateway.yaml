@@ -1,0 +1,188 @@
+---
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: realtime-frontend-jwt
+  namespace: realtime-platform
+plugin: jwt
+config:
+  secret_is_base64: false
+  run_on_preflight: true
+  key_claim_name: "kid"
+  secret_claim_name: "secret"
+---
+apiVersion: configuration.konghq.com/v1
+kind: KongConsumer
+metadata:
+  name: realtime-frontend-consumer
+  namespace: realtime-platform
+username: realtime-frontend
+credentials:
+  - realtime-frontend-jwt
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: realtime-frontend-jwt
+  namespace: realtime-platform
+type: Opaque
+stringData:
+  kongCredType: jwt
+  key: "realtime-frontend-key"
+  algorithm: "RS256"
+  rsa_public_key: |
+    -----BEGIN PUBLIC KEY-----
+    MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...
+    -----END PUBLIC KEY-----
+---
+apiVersion: configuration.konghq.com/v1
+kind: KongIngress
+metadata:
+  name: realtime-frontend-ingress
+  namespace: realtime-platform
+route:
+  methods:
+    - GET
+    - POST
+    - PUT
+    - PATCH
+    - DELETE
+    - OPTIONS
+  strip_path: false
+  preserve_host: true
+  protocols:
+    - http
+    - https
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: realtime-frontend-ingress
+  namespace: realtime-platform
+  annotations:
+    kubernetes.io/ingress.class: kong
+    konghq.com/plugins: realtime-frontend-jwt
+    konghq.com/strip-path: "false"
+    konghq.com/preserve-host: "true"
+spec:
+  ingressClassName: kong
+  rules:
+    - host: frontend.realtime-platform.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: realtime-frontend
+                port:
+                  number: 80
+  tls:
+    - hosts:
+        - frontend.realtime-platform.local
+      secretName: realtime-frontend-tls
+---
+apiVersion: configuration.konghq.com/v1
+kind: KongServiceFacade
+metadata:
+  name: realtime-frontend-service
+  namespace: realtime-platform
+backend:
+  name: realtime-frontend
+  port: 80
+---
+apiVersion: configuration.konghq.com/v1
+kind: RateLimitPlugin
+metadata:
+  name: realtime-frontend-ratelimit
+  namespace: realtime-platform
+config:
+  minute: 100
+  hour: 1000
+  policy: redis
+  redis_host: redis-service.realtime-platform.svc.cluster.local
+  redis_port: 6379
+  redis_timeout: 2000
+  fault_tolerant: true
+  hide_client_headers: false
+---
+apiVersion: configuration.konghq.com/v1
+kind: RequestTransformerPlugin
+metadata:
+  name: realtime-frontend-headers
+  namespace: realtime-platform
+config:
+  add:
+    headers:
+      - "X-Real-Time-Platform:v1.0.0"
+      - "X-Request-ID:$uuid"
+  remove:
+    headers:
+      - "X-Powered-By"
+---
+apiVersion: configuration.konghq.com/v1
+kind: CORSPlugin
+metadata:
+  name: realtime-frontend-cors
+  namespace: realtime-platform
+config:
+  origins:
+    - "https://realtime-platform.local"
+    - "https://app.realtime-platform.local"
+  methods:
+    - GET
+    - POST
+    - PUT
+    - PATCH
+    - DELETE
+    - OPTIONS
+  headers:
+    - Accept
+    - Authorization
+    - Content-Type
+    - X-Requested-With
+  expose_headers:
+    - X-Request-ID
+    - X-Response-Time
+  credentials: true
+  max_age: 3600
+  preflight_continue: false
+---
+apiVersion: configuration.konghq.com/v1
+kind: RequestTerminationPlugin
+metadata:
+  name: realtime-frontend-maintenance
+  namespace: realtime-platform
+enabled: false
+config:
+  status_code: 503
+  message: "Real-time Platform is currently under maintenance"
+  body: '{"error": "Service temporarily unavailable", "code": "maintenance"}'
+---
+apiVersion: configuration.konghq.com/v1
+kind: BotDetectionPlugin
+metadata:
+  name: realtime-frontend-bot-detection
+  namespace: realtime-platform
+config:
+  allow:
+    - "Googlebot"
+    - "Bingbot"
+  deny:
+    - "curl"
+    - "wget"
+    - "python-requests"
+---
+apiVersion: configuration.konghq.com/v1
+kind: ACLPlugin
+metadata:
+  name: realtime-frontend-acl
+  namespace: realtime-platform
+config:
+  allow:
+    - "students"
+    - "instructors"
+    - "admins"
+  deny:
+    - "banned"
+  hide_groups_header: false

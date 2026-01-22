@@ -144,52 +144,6 @@ export async function POST(request: NextRequest) {
   }
 }
 
-/**
- * Transform Dapr event to frontend SSE event format
- */
-function transformDaprEvent(daprEvent: DaprEvent): ProcessedEvent | null {
-  try {
-    // Validate required Dapr event fields
-    if (!daprEvent.id || !daprEvent.type || !daprEvent.data) {
-      return null;
-    }
-
-    // Map Dapr event type to frontend event type
-    const eventType = mapDaprTypeToFrontendType(daprEvent.type);
-    if (!eventType) {
-      console.warn(`Unknown Dapr event type: ${daprEvent.type}`);
-      return null;
-    }
-
-    // Determine priority based on event type and data
-    const priority = determineEventPriority(daprEvent);
-
-    // Extract student ID if present
-    const studentId = daprEvent.data.studentId || daprEvent.metadata?.studentId;
-
-    // Create topic name (e.g., "mastery-updated", "feedback-received")
-    const topic = eventType;
-
-    return {
-      id: `evt-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      topic,
-      type: eventType,
-      data: daprEvent.data,
-      priority,
-      timestamp: daprEvent.timestamp || new Date().toISOString(),
-      metadata: {
-        source: daprEvent.source || 'dapr',
-        rawPayload: JSON.stringify(daprEvent),
-        studentId,
-        daprEventId: daprEvent.id,
-      },
-    };
-
-  } catch (error) {
-    console.error('Error transforming Dapr event:', error);
-    return null;
-  }
-}
 
 /**
  * Map Dapr event types to frontend event types

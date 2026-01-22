@@ -141,8 +141,6 @@ export default function DashboardPage() {
     };
   }, [sse, state.isAuthenticated]);
 
-  // Fetch mastery data (would use React Query in production)
-  const masteryData = MOCK_MASTERY_DATA;
 
   // Calculate progress percentage
   const progressPercentage = (masteryData.completedAssignments / masteryData.totalAssignments) * 100;

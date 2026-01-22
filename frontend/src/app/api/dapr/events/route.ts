@@ -201,40 +201,6 @@ function determineEventPriority(daprEvent: DaprEvent): 'high' | 'normal' | 'low'
   return 'normal';
 }
 
-/**
- * Route event to appropriate SSE connections
- */
-async function routeEventToSSE(event: ProcessedEvent): Promise<void> {
-  const routedConnections: string[] = [];
-
-  // Iterate through all active SSE connections
-  for (const [connectionId, connection] of sseConnections.entries()) {
-    // Check if connection is interested in this topic
-    if (connection.topics.has(event.topic)) {
-      // Check if student-specific filtering is needed
-      if (event.metadata.studentId && connection.studentId !== event.metadata.studentId) {
-        continue; // Skip this connection - not the intended student
-      }
-
-      // Send event to connection
-      if (connection.connection) {
-        try {
-          const eventData = JSON.stringify(event);
-          connection.connection.enqueue(`data: ${eventData}\n\n`);
-          routedConnections.push(connectionId);
-
-          console.log(`📤 Routed event ${event.id} to connection ${connectionId}`);
-        } catch (error) {
-          console.error(`Failed to send event to connection ${connectionId}:`, error);
-          // Clean up failed connection
-          sseConnections.delete(connectionId);
-        }
-      }
-    }
-  }
-
-  console.log(`📨 Event ${event.id} routed to ${routedConnections.length} connections`);
-}
 
 /**
  * Count connections that would receive this event

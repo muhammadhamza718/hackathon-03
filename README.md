@@ -97,7 +97,7 @@ Here is a detailed comparison:
 * **Breadth of Automation:** Goose is designed to be a general-purpose *engineering assistant* that can orchestrate entire workflows, not just coding tasks Claude Code is a more *specialized* tool focused primarily on code and repository management  
 * **Code Quality:** Claude models (Opus, Sonnet) are often cited on benchmarks as being among the best for raw **code generation accuracy and quality**, particularly for complex reasoning and adhering to multi-step instructions Goose's performance in this area will depend entirely on the specific LLM you configure it to use.
 
-In summary, if you value **open-source, local execution, and the ability to swap models**, Goose is the stronger choice. If you prioritize having **Anthropic's SOTA code LLMs** directly integrated into your terminal environment for code-specific tasks, Claude Code is a powerful contender.
+In summary, if you value **open-source, local execution, and the ability to swap models**, Goose is the stronger choice. If you prioritize having **Anthropic's SOTA code LLMs** directly integrated into your terminal environment for code-specific tasks, Claude Code is a powerful contender
 
 # **Part 3: Understanding Skills with MCP Code Execution**
 

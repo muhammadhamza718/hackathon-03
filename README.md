@@ -9,7 +9,7 @@ Building Agentic Infrastructure with Skills, MCP Code Execution, Claude Code, an
 
 # **Part 1: Introduction**
 
-Welcome to the Reusable Intelligence and Cloud-Native Mastery Hackathon\! This hackathon represents a paradigm shift in software development. Instead of writing code manually, you'll learn to **teach AI coding agents** how to build sophisticated cloud-native agentic applications autonomously
+Welcome to the Reusable Intelligence and Cloud-Native Mastery Hackathon\! This hackathon represents a paradigm shift in software development. Instead of writing code manually, you'll learn to **teach AI coding agents** how to build sophisticated cloud-native agentic applications autonomously.
 
 ## **What You'll Learn**
 
